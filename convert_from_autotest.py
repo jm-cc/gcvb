@@ -1,7 +1,8 @@
 import xml.etree.ElementTree as ET
 import os
 import shutil
-import yaml
+from ruamel.yaml import YAML
+from collections import OrderedDict
 
 # from data.xml create 
 def convert_xml_data(old_data,new_data):
@@ -30,7 +31,7 @@ def convert_xml_data(old_data,new_data):
 
 # takes an old tests.xml and returns a dict to be dump as a "tests.yaml"
 def convert_test(old_dir):
-    res={}
+    res=OrderedDict()
     res["Packs"]=[]
     xml_input=old_dir+"xml/tests.xml"
     tree=ET.parse(xml_input)
@@ -39,7 +40,7 @@ def convert_test(old_dir):
         if tP.tag != "TestsPack":
             continue
         testPack=tP.attrib
-        current_pack={}
+        current_pack=OrderedDict()
         res["Packs"].append(current_pack)        
         current_pack["pack_id"]=testPack["packageName"]
         current_pack["description"]=testPack["description"]
@@ -47,7 +48,7 @@ def convert_test(old_dir):
         current_pack["Tests"]=[]
         for te in tP:
             test=te.attrib
-            current_test={}
+            current_test=OrderedDict()
             current_pack["Tests"].append(current_test)
             # Test
             current_test["id"]=test["testId"]
@@ -56,7 +57,7 @@ def convert_test(old_dir):
             current_test["Tasks"]=[]
             for ta in te:
                 task=ta.attrib
-                current_task={}
+                current_task=OrderedDict()
                 current_test["Tasks"].append(current_task)
                 #Task
                 current_task["executable"]=task["executable"]
@@ -73,12 +74,15 @@ def convert_test(old_dir):
                     all_validations=task["validations"].split(",")
                     for va in all_validations:
                         valid=va.strip().split("+")
-                        current_validation={}
+                        current_validation=OrderedDict()
                         current_task["Validations"].append(current_validation)
                         current_validation["id"]=valid[0]
                         current_validation["tolerance"]=valid[1]
     return res
 
 #dictionnary to yaml
-def dictionnary_to_yaml(dic,yaml):
-    
+def dictionnary_to_yaml(dic,yaml_file):
+    yaml = YAML()
+    yaml.Representer.add_representer(OrderedDict, yaml.Representer.represent_dict)
+    with open(yaml_file,'w') as f:
+        yaml.dump(d,f)
