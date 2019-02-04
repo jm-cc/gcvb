@@ -1,5 +1,7 @@
 import yaml
 import copy
+import template
+import time
 
 def propagate_default_value(default_dict,target_dict):
     for step in ["validation","task"]:
@@ -21,15 +23,25 @@ def load_yaml(yaml_file):
     default_values=original.get("default_values",{})
 
     for pack in original["Packs"]:
-        current_pack=copy.deepcopy(pack)
+        current_pack={}
+        for key in pack.keys():
+            if (key!="Tests"):
+                current_pack[key]=pack[key]
+        current_pack["Tests"]=[]
+
         res.append(current_pack)
         #add not-overrided default_values to default_values
         current_pack.setdefault("default_values",{})
         propagate_default_value(default_values,current_pack["default_values"])
-        current_pack["Tests"]=[]
+
         for test in pack["Tests"]:
             if test.get("type","simple")=="template":
-                pass
+                generated_tests=template.generate_dict_list(test["template_instantiation"])
+                for t in generated_tests:
+                    current_test=template.apply_instantiation(test,t)
+                    del current_test["template_instantiation"]
+                    del current_test["type"]
+                    current_pack["Tests"].append(current_test)
             else:
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
