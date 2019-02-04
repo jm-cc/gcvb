@@ -20,10 +20,11 @@ def parse():
     args=parser.parse_args()
     return args
 
-if __name__ == '__main__':
+def main():
     args=parse()
     a=yaml_input.load_yaml(args.yaml_file)
     if args.command=="list":
         print(yaml.dump(a))
-        
 
+if __name__ == '__main__':
+    main()
