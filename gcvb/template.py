@@ -1,7 +1,7 @@
 def fill_current_key(e,current_key,current_dict):
     res=current_dict.copy()
     if (isinstance(e,(dict))):
-        for k,v in e.iteritems():
+        for k,v in e.items():
             res[current_key+"#"+str(k)]=v
     else:
         res[current_key]=e
@@ -41,7 +41,7 @@ def apply_instantiation(tpl,format_dict):
     """
     if isinstance(tpl,dict):
         instance={}
-        for k,v in tpl.iteritems():
+        for k,v in tpl.items():
             instance[k]=apply_instantiation(v,format_dict)
         return instance
     elif isinstance(tpl,list):
