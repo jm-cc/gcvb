@@ -2,20 +2,36 @@ default_values:
   validation:
     executable: "CalcEps"
 Packs:
-  - pack_id : "Direct Solver"
-    description : "We run the direct solver (L.U or L.D.tL factorization, depending on the symmetry of the system) 
-  on 6 conespheres (perfectly conducting, perfectly conducting with impedance, dielectric, coated dielectric, absorbing dielectric, coated absorbing dielectric) and a box illuminated by incoming plane waves. These computations are done also with ground planes (x, y, z) or symmetry planes (y, z and y+z), and frequency loops. CFIE is tested on the P.C. case. For each of these tests, we run first the solver itself, then a near-field computation, a current computation and a far-field computation."
-    objective : "Validate the interaction computations for all the geometrical and physical configuration. 
-                 Validate the matrices assembly. 
-                 Validate the direct solver"
-    Tests:
-      - id : OIT_41
-        description: blablablab sfq jsdf qjskdf 
-        tags : [hpc,blabla]
-        Tasks:
-          - executable: "elfipole"
-            Validations :
-              - id : be40j_far
-                tolerance : 0.001
-              - id : other
-                tolerance : 100
+- pack_id : "Direct Solver"
+  description : "We run the direct solver (L.U or L.D.tL factorization, depending on the symmetry of the system) 
+on 6 conespheres (perfectly conducting, perfectly conducting with impedance, dielectric, coated dielectric, absorbing dielectric, coated absorbing dielectric) and a box illuminated by incoming plane waves. These computations are done also with ground planes (x, y, z) or symmetry planes (y, z and y+z), and frequency loops. CFIE is tested on the P.C. case. For each of these tests, we run first the solver itself, then a near-field computation, a current computation and a far-field computation."
+  objective : "Validate the interaction computations for all the geometrical and physical configuration. 
+               Validate the matrices assembly. 
+               Validate the direct solver"
+  Tests:
+  - id : OIT_41
+    description: blablablab sfq jsdf qjskdf 
+    tags : [hpc,blabla]
+    Tasks:
+    - executable: "elfipole"
+      Validations :
+      - id : be40j_far
+        tolerance : 0.001
+      - id : other
+        tolerance : 100
+- pack_id : "Template test"
+  description : "Multiple tests generated via the template system"
+  Tests :
+  - id: Template_{letter}_{number#id}
+    type : "template"
+    template_instantiation:
+      letter: [A,B]
+      number:
+      - {id: "1" ,roman: "I"}
+      - {id: "11",roman: "XI"}
+      - {id: "4" ,roman: "IV"}
+    description: "A test with a {letter} and a {number#id}"
+    tags : [templated]
+    Tasks:
+    - executable : "echo"
+      options : "{letter} {number#roman} {number#id}"
