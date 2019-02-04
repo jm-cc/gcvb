@@ -1,6 +1,6 @@
 import argparse
 import yaml
-import yaml_input
+from . import yaml_input
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark")

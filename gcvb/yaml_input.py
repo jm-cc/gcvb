@@ -1,7 +1,6 @@
 import yaml
 import copy
-import template
-import time
+from . import template
 
 def propagate_default_value(default_dict,target_dict):
     for step in ["validation","task"]:
