@@ -26,9 +26,15 @@ def load_yaml(yaml_file):
         #add not-overrided default_values to default_values
         current_pack.setdefault("default_values",{})
         propagate_default_value(default_values,current_pack["default_values"])
-        for test in current_pack["Tests"]:
-            test.setdefault("default_values",{})
-            propagate_default_value(current_pack["default_values"],test["default_values"])
+        current_pack["Tests"]=[]
+        for test in pack["Tests"]:
+            if test.get("type","simple")=="template":
+                pass
+            else:
+                current_test=copy.deepcopy(test)
+                current_pack["Tests"].append(current_test)
+                current_test.setdefault("default_values",{})
+                propagate_default_value(current_pack["default_values"],current_test["default_values"])
 
     return res
 
