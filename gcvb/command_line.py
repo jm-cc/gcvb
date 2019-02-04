@@ -3,7 +3,7 @@ import yaml
 from . import yaml_input
 
 def parse():
-    parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark")
+    parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
 
     #filters options
     parser.add_argument('--yaml-file',metavar="filename",default="test.yaml")
