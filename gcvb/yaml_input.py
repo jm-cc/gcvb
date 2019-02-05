@@ -18,8 +18,10 @@ def load_yaml(yaml_file):
     with open(yaml_file,'r') as stream:
         original=yaml.load(stream)
 
-    res=[]
+    res={}
     default_values=original.get("default_values",{})
+    res["default_values"]=default_values
+    res["Packs"]=[]
 
     for pack in original["Packs"]:
         current_pack={}
@@ -28,7 +30,7 @@ def load_yaml(yaml_file):
                 current_pack[key]=pack[key]
         current_pack["Tests"]=[]
 
-        res.append(current_pack)
+        res["Packs"].append(current_pack)
         #add not-overrided default_values to default_values
         current_pack.setdefault("default_values",{})
         propagate_default_value(default_values,current_pack["default_values"])
