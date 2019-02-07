@@ -3,11 +3,16 @@ import copy
 from . import template
 
 def propagate_default_value(default_dict,target_dict):
-    for step in ["validation","task"]:
+    for step in ["validation","task","test"]:
         target_dict.setdefault(step,{})
         for k in default_dict.get(step,{}).keys():
             if k not in target_dict[step]:
                 target_dict[step][k]=default_dict[step][k]
+
+def set_default_value(default_dict,target_dict):
+    for k,v in default_dict.items():
+        if k not in target_dict:
+            target_dict[k]=v
 
 def load_yaml(yaml_file):
     """Load a yaml file and generate the corresponding gcvb dictionary
@@ -20,8 +25,22 @@ def load_yaml(yaml_file):
 
     res={}
     default_values=original.get("default_values",{})
-    res["default_values"]=default_values
+    #res["default_values"]=default_values
     res["Packs"]=[]
+
+    for pack in original["Packs"]:
+        pack.setdefault("default_values",{})
+        propagate_default_value(default_values,pack["default_values"])
+        for test in pack["Tests"]:
+            test.setdefault("default_values",{})
+            propagate_default_value(pack["default_values"],test["default_values"])
+            set_default_value(test["default_values"]["test"],test)
+            for t in test["Tasks"]:
+                set_default_value(test["default_values"]["task"],t)
+                for v in t.get("Validations",[]):
+                    set_default_value(test["default_values"]["validation"],v)
+            del test["default_values"]
+        del pack["default_values"]
 
     for pack in original["Packs"]:
         current_pack={}
@@ -31,10 +50,6 @@ def load_yaml(yaml_file):
         current_pack["Tests"]=[]
 
         res["Packs"].append(current_pack)
-        #add not-overrided default_values to default_values
-        current_pack.setdefault("default_values",{})
-        propagate_default_value(default_values,current_pack["default_values"])
-
         for test in pack["Tests"]:
             if test.get("type","simple")=="template":
                 generated_tests=template.generate_dict_list(test["template_instantiation"])
@@ -46,9 +61,6 @@ def load_yaml(yaml_file):
             else:
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
-                current_test.setdefault("default_values",{})
-                propagate_default_value(current_pack["default_values"],current_test["default_values"])
-
     return res
 
 def filter_by_tag(tests,tag):

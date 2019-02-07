@@ -1,6 +1,10 @@
 default_values:
+  test:
+    data: "empty_data"
   validation:
     executable: "CalcEps"
+  task:
+    executable: "default_exec_at_file_level"
 Packs:
 - pack_id : "Direct Solver"
   description : "We run the direct solver (L.U or L.D.tL factorization, depending on the symmetry of the system) 
@@ -8,6 +12,9 @@ on 6 conespheres (perfectly conducting, perfectly conducting with impedance, die
   objective : "Validate the interaction computations for all the geometrical and physical configuration. 
                Validate the matrices assembly. 
                Validate the direct solver"
+  default_values:
+    task:
+      executable: "default_exec_at_pack_level"
   Tests:
   - id : OIT_41
     description: blablablab sfq jsdf qjskdf 
@@ -19,6 +26,9 @@ on 6 conespheres (perfectly conducting, perfectly conducting with impedance, die
         tolerance : 0.001
       - id : other
         tolerance : 100
+  - id : NO_EXEC
+    Tasks:
+    - options: "--opt"
 - pack_id : "Template test"
   description : "Multiple tests generated via the template system"
   Tests :
