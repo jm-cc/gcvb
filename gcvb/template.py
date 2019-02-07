@@ -1,10 +1,6 @@
 def fill_current_key(e,current_key,current_dict):
     res=current_dict.copy()
-    if (isinstance(e,(dict))):
-        for k,v in e.items():
-            res[current_key+"#"+str(k)]=v
-    else:
-        res[current_key]=e
+    res[current_key]=e
     return res
 
 def rec_generation(param_dict,keys,current_dict={},res=list()):

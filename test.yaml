@@ -22,7 +22,7 @@ on 6 conespheres (perfectly conducting, perfectly conducting with impedance, die
 - pack_id : "Template test"
   description : "Multiple tests generated via the template system"
   Tests :
-  - id: Template_{letter}_{number#id}
+  - id: Template_{letter}_{number[id]}
     type : "template"
     template_instantiation:
       letter: [A,B]
@@ -30,8 +30,8 @@ on 6 conespheres (perfectly conducting, perfectly conducting with impedance, die
       - {id: "1" ,roman: "I"}
       - {id: "11",roman: "XI"}
       - {id: "4" ,roman: "IV"}
-    description: "A test with a {letter} and a {number#id}"
+    description: "A test with a {letter} and a {number[id]}"
     tags : [templated]
     Tasks:
     - executable : "echo"
-      options : "{letter} {number#roman} {number#id}"
+      options : "{letter} {number[roman]} {number[id]}"
