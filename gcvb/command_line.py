@@ -3,6 +3,7 @@ import yaml
 import re
 import os
 from . import yaml_input
+from . import template
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -52,7 +53,12 @@ def main():
                 data_path=os.path.join(data_root,t["data"],"input")
                 for file in os.listdir(data_path):
                     os.symlink(os.path.join(data_path,file),os.path.join(target_dir,t["id"],file))
-
+                if ("template_files" in t):
+                    template_path=os.path.join(data_root,t["data"],"template",t["template_files"])
+                    for file in os.listdir(template_path):
+                        src=os.path.join(template_path,file)
+                        dst=os.path.join(target_dir,t["id"],file)
+                        template.apply_format_to_file(src,dst,t["template_instantiation"])
 
 if __name__ == '__main__':
     main()

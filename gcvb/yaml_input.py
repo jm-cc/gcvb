@@ -57,6 +57,7 @@ def load_yaml(yaml_file):
                     current_test=template.apply_instantiation(test,t)
                     del current_test["template_instantiation"]
                     del current_test["type"]
+                    current_test["template_instantiation"]=t
                     current_pack["Tests"].append(current_test)
             else:
                 current_test=copy.deepcopy(test)

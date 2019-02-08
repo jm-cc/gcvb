@@ -49,3 +49,15 @@ def apply_instantiation(tpl,format_dict):
         return tpl.format(**format_dict)
     else:
         return tpl
+
+def apply_format_to_file(input_file, output_file, format_dict):
+    """Generate a file from a template and the associated ddictionary
+
+    keyword arguments
+    input_file    --  name of the template file
+    output_file   --  name of the file that will be generated
+    format_dict   --  values to fill the template
+    """
+    with open(input_file, 'r') as f_in, open(output_file, 'w') as f_out:
+        for line in f_in:
+            f_out.write(line.format(**format_dict))
