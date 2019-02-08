@@ -40,6 +40,8 @@ def convert_xml_data(old_data,new_data):
         current_data=data_new_dir[attrib["data"]]
         for vo in vogroup:
             a=vo.attrib
+            if "voDir" not in a:
+                continue
             dst=os.path.join(new_data,current_data,"references",a["voDir"])
             try:
                 os.makedirs(dst)
