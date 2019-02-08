@@ -34,6 +34,7 @@ on 6 conespheres (perfectly conducting, perfectly conducting with impedance, die
   Tests :
   - id: Template_{letter}_{number[id]}
     type : "template"
+    template_files : "classical"
     template_instantiation:
       letter: [A,B]
       number:
