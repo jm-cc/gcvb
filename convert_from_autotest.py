@@ -54,13 +54,15 @@ def convert_xml_data(old_data,new_data):
                 try:
                     shutil.copy(src,dst)
                 except FileNotFoundError:
-                    print ("File {} does not exists !".format(src))                
+                    print ("File {} does not exists !".format(src))
+    return data_new_dir
+
             
 
 
 
 # takes an old tests.xml and returns a dict to be dump as a "tests.yaml"
-def convert_test(old_dir):
+def convert_test(old_dir,data={}):
     res=OrderedDict()
     res["Packs"]=[]
     xml_input=old_dir+"xml/tests.xml"
@@ -83,7 +85,8 @@ def convert_test(old_dir):
             # Test
             current_test["id"]=test["testId"]
             current_test["description"]=test["description"]
-            current_test["data"]=test["data"] #Must be modified since now the data are not organized the same way as before
+            if data:
+                current_test["data"]=data[test["data"]]
             current_test["Tasks"]=[]
             for ta in te:
                 task=ta.attrib
