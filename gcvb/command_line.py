@@ -49,7 +49,7 @@ def main():
         for p in a["Packs"]:
             for t in p["Tests"]:
                 os.makedirs(os.path.join(target_dir,t["id"]))
-                data_path=os.path.join(data_root,t["data"])
+                data_path=os.path.join(data_root,t["data"],"input")
                 for file in os.listdir(data_path):
                     os.symlink(os.path.join(data_path,file),os.path.join(target_dir,t["id"],file))
 
