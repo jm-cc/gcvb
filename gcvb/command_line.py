@@ -1,6 +1,7 @@
 import argparse
 import yaml
 import re
+import os
 from . import yaml_input
 
 def parse():
@@ -41,6 +42,17 @@ def main():
     #Commands
     if args.command=="list":
         print(yaml.dump(a))
+    if args.command=="generate":
+        target_dir="./results/0"
+        data_root=os.path.join(os.getcwd(),"data")
+        os.makedirs(target_dir)
+        for p in a["Packs"]:
+            for t in p["Tests"]:
+                os.makedirs(os.path.join(target_dir,t["id"]))
+                data_path=os.path.join(data_root,t["data"])
+                for file in os.listdir(data_path):
+                    os.symlink(os.path.join(data_path,file),os.path.join(target_dir,t["id"],file))
+
 
 if __name__ == '__main__':
     main()
