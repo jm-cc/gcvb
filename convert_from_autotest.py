@@ -6,12 +6,14 @@ from collections import OrderedDict
 
 # from data.xml create 
 def convert_xml_data(old_data,new_data):
-    xml_input=old_data+"/xml/data.xml"
-    tree=ET.parse(xml_input)
+    data_xml=old_data+"/xml/data.xml"
+    tree=ET.parse(data_xml)
     root=tree.getroot()
+    data_new_dir={}    
     for child in root:
         attrib=child.attrib
-        target_dir=os.path.join(new_data,attrib["directory"],attrib["dataId"],"input")
+        data_new_dir[attrib["dataId"]]=os.path.join(attrib["directory"],attrib["dataId"])
+        target_dir=os.path.join(new_data,data_new_dir[attrib["dataId"]],"input")
         try:
             os.makedirs(target_dir)
         except OSError:
@@ -28,6 +30,32 @@ def convert_xml_data(old_data,new_data):
                 except:
                     print("File {} does not exist !".format(src))
                     pass
+    valid_xml=old_data+"/xml/valid.xml"
+    tree=ET.parse(valid_xml)
+    root=tree.getroot()
+    for vogroup in root:
+        if vogroup.tag != "vogroup":
+            continue        
+        attrib=vogroup.attrib
+        current_data=data_new_dir[attrib["data"]]
+        for vo in vogroup:
+            a=vo.attrib
+            dst=os.path.join(new_data,current_data,"references",a["voDir"])
+            try:
+                os.makedirs(dst)
+            except OSError:
+                print("File {} already exists !".format(target_dir))
+            files=a["voFiles"].split(",")
+            for f in files:
+                tmp=os.path.split(current_data)[0]
+                src=os.path.join(old_data,tmp,a["voDir"],f.strip())
+                try:
+                    shutil.copy(src,dst)
+                except FileNotFoundError:
+                    print ("File {} does not exists !".format(src))                
+            
+
+
 
 # takes an old tests.xml and returns a dict to be dump as a "tests.yaml"
 def convert_test(old_dir):
