@@ -109,7 +109,7 @@ def convert_test(old_dir):
     return res
 
 #dictionnary to yaml
-def dictionnary_to_yaml(dic,yaml_file):
+def dictionnary_to_yaml(d,yaml_file):
     yaml = YAML()
     yaml.Representer.add_representer(OrderedDict, yaml.Representer.represent_dict)
     with open(yaml_file,'w') as f:
