@@ -23,23 +23,27 @@ def parse():
     args=parser.parse_args()
     return args
 
-def main():
-    args=parse()
-    a=yaml_input.load_yaml(args.yaml_file)
-    # Filters
+def filter(args,data):
     if (args.filter_by_pack):
-        a["Packs"]=[p for p in a["Packs"] if re.match(args.filter_by_pack,p["pack_id"])]
+        data["Packs"]=[p for p in data["Packs"] if re.match(args.filter_by_pack,p["pack_id"])]
     if (args.filter_by_tag):
-        for e in a["Packs"]:
+        for e in data["Packs"]:
             e["Tests"]=[t for t in e["Tests"] if args.filter_by_tag in t.get("tags",[])]
     if (args.filter_by_tag_and):
         tags=set(args.filter_by_tag_and.split(","))
-        for e in a["Packs"]:
+        for e in data["Packs"]:
             e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))==tags)]
     if (args.filter_by_tag_or):
         tags=set(args.filter_by_tag_or.split(","))
-        for e in a["Packs"]:
+        for e in data["Packs"]:
             e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))!=set())]
+    return data
+
+def main():
+    args=parse()
+    if args.command in ["list,generate"]:
+        a=yaml_input.load_yaml(args.yaml_file)
+        a=filter(args,a)
     #Commands
     if args.command=="list":
         print(yaml.dump(a))
