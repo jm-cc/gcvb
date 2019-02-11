@@ -11,6 +11,7 @@ def parse():
     #filters options
     parser.add_argument('--yaml-file',metavar="filename",default="test.yaml")
     parser.add_argument('--filter-by-pack',metavar="regexp",help="Regexp to select packs")
+    parser.add_argument('--filter-by-test-id',metavar="regexp",help="Regexp to select jobs by test-id")
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--filter-by-tag',metavar="tag",help="a tag name to filter tests")
     group.add_argument('--filter-by-tag-and',metavar="tag_list",help="comma-separated list of tags to filter tests (AND operator)")
@@ -26,6 +27,9 @@ def parse():
 def filter(args,data):
     if (args.filter_by_pack):
         data["Packs"]=[p for p in data["Packs"] if re.match(args.filter_by_pack,p["pack_id"])]
+    if (args.filter_by_test_id):
+        for e in data["Packs"]:
+            e["Tests"]=[t for t in e["Tests"] if re.match(args.filter_by_test_id,t["id"])]
     if (args.filter_by_tag):
         for e in data["Packs"]:
             e["Tests"]=[t for t in e["Tests"] if args.filter_by_tag in t.get("tags",[])]
