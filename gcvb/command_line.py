@@ -45,7 +45,7 @@ def filter(args,data):
 
 def main():
     args=parse()
-    if args.command in ["list,generate"]:
+    if args.command in ["list","generate"]:
         a=yaml_input.load_yaml(args.yaml_file)
         a=filter(args,a)
     #Commands
