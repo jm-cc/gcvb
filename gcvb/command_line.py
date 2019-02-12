@@ -2,6 +2,8 @@ import argparse
 import yaml
 import re
 import os
+import gzip
+import shutil
 from . import yaml_input
 from . import template
 
@@ -43,6 +45,11 @@ def filter(args,data):
             e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))!=set())]
     return data
 
+def uncompress(file_in,file_out):
+    with gzip.open(file_in, 'rb') as f_in:
+        with open(file_out, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
 def main():
     args=parse()
     if args.command in ["list","generate"]:
@@ -60,7 +67,13 @@ def main():
                 os.makedirs(os.path.join(target_dir,t["id"]))
                 data_path=os.path.join(data_root,t["data"],"input")
                 for file in os.listdir(data_path):
-                    os.symlink(os.path.join(data_path,file),os.path.join(target_dir,t["id"],file))
+                    extension = os.path.splitext(file)[1]
+                    src=os.path.join(data_path,file)
+                    dst=os.path.join(target_dir,t["id"],file)
+                    if (extension==".gz"):
+                        uncompress(src,dst[:-3])
+                    else:
+                        os.symlink(src,dst)
                 if ("template_files" in t):
                     template_path=os.path.join(data_root,t["data"],"template",t["template_files"])
                     for file in os.listdir(template_path):
