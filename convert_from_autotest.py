@@ -33,14 +33,17 @@ def convert_xml_data(old_data,new_data):
     valid_xml=old_data+"/xml/valid.xml"
     tree=ET.parse(valid_xml)
     root=tree.getroot()
+    yaml_per_dir=OrderedDict()
     for vogroup in root:
         if vogroup.tag != "vogroup":
             continue        
         attrib=vogroup.attrib
         current_data=data_new_dir[attrib["data"]]
+        yaml_per_dir.setdefault(current_data, default={})
         for vo in vogroup:
             a=vo.attrib
             if "voDir" not in a:
+                print("{} skipped, no voDir".format(repr(a)))
                 continue
             dst=os.path.join(new_data,current_data,"references",a["voDir"])
             try:
@@ -55,6 +58,17 @@ def convert_xml_data(old_data,new_data):
                     shutil.copy(src,dst)
                 except FileNotFoundError:
                     print ("File {} does not exists !".format(src))
+            tmp=OrderedDict()
+            tmp["id"]=a["voId"]
+            tmp["description"]=a["voDescr"]
+            tmp["file"]=files[0]
+            if (len(files))>1:
+                print ("More than one file for id {}".format(tmp["id"]))
+            yaml_per_dir[current_data].setdefault(a["voDir"],[]).append(tmp)
+    for directory,validations in yaml_per_dir.items():
+        for refname,future_yaml in validations.items():
+            dst=os.path.join(new_data,directory,"references",refname,"ref.yaml")
+            dictionnary_to_yaml(future_yaml,dst)
     return data_new_dir
 
             
