@@ -14,6 +14,7 @@ def parse():
 
     #filters options
     parser.add_argument('--yaml-file',metavar="filename",default="test.yaml")
+    parser.add_argument('--data-root',metavar="dir",default=os.path.join(os.getcwd(),"data"))
     parser.add_argument('--filter-by-pack',metavar="regexp",help="Regexp to select packs")
     parser.add_argument('--filter-by-test-id',metavar="regexp",help="Regexp to select jobs by test-id")
     group = parser.add_mutually_exclusive_group()
@@ -55,6 +56,7 @@ def uncompress(file_in,file_out):
 
 def main():
     args=parse()
+    data_root=os.path.abspath(args.data_root)
     if args.command in ["list","generate"]:
         a=yaml_input.load_yaml(args.yaml_file)
         a=filter(args,a)
@@ -63,7 +65,6 @@ def main():
         print(yaml.dump(a))
     if args.command=="generate":
         target_dir="./results/0"
-        data_root=os.path.join(os.getcwd(),"data")
         os.makedirs(target_dir)
         test_file=os.path.join(target_dir,"tests.yaml")
         with open(test_file,'w') as f:
@@ -90,7 +91,6 @@ def main():
         computation_dir="./results/0"
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
         a=filter(args,a)
-        data_root=os.path.join(os.getcwd(),"data")
         config=util.open_yaml("config.yaml")
 
         all_tests=[]
