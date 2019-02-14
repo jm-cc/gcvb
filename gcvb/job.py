@@ -1,4 +1,34 @@
 import os
+from . import util
+
+def generate(target_dir,data_root,gcvb):
+    """Generate computation directories
+
+    Keyword arguments:
+    target_dir -- targeted directory
+    gcvb       -- gcvb struct
+    """
+    os.makedirs(target_dir)
+    test_file=os.path.join(target_dir,"tests.yaml")
+    util.write_yaml(gcvb,test_file)
+    for p in gcvb["Packs"]:
+        for t in p["Tests"]:
+            os.makedirs(os.path.join(target_dir,t["id"]))
+            data_path=os.path.join(data_root,t["data"],"input")
+            for file in os.listdir(data_path):
+                extension = os.path.splitext(file)[1]
+                src=os.path.join(data_path,file)
+                dst=os.path.join(target_dir,t["id"],file)
+                if (extension==".gz"):
+                    util.uncompress(src,dst[:-3])
+                else:
+                    os.symlink(src,dst)
+            if ("template_files" in t):
+                template_path=os.path.join(data_root,t["data"],"template",t["template_files"])
+                for file in os.listdir(template_path):
+                    src=os.path.join(template_path,file)
+                    dst=os.path.join(target_dir,t["id"],file)
+                    template.apply_format_to_file(src,dst,t["template_instantiation"])
 
 def launch(tests, config, data_root, valid, *, job_file="job.sh"):
     with open(job_file,'w') as f:

@@ -2,8 +2,6 @@ import argparse
 import yaml
 import re
 import os
-import gzip
-import shutil
 from . import yaml_input
 from . import template
 from . import job
@@ -49,11 +47,6 @@ def filter(args,data):
             e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))!=set())]
     return data
 
-def uncompress(file_in,file_out):
-    with gzip.open(file_in, 'rb') as f_in:
-        with open(file_out, 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
-
 def main():
     args=parse()
     data_root=os.path.abspath(args.data_root)
@@ -65,28 +58,8 @@ def main():
         print(yaml.dump(a))
     if args.command=="generate":
         target_dir="./results/0"
-        os.makedirs(target_dir)
-        test_file=os.path.join(target_dir,"tests.yaml")
-        with open(test_file,'w') as f:
-            f.write(yaml.dump(a))
-        for p in a["Packs"]:
-            for t in p["Tests"]:
-                os.makedirs(os.path.join(target_dir,t["id"]))
-                data_path=os.path.join(data_root,t["data"],"input")
-                for file in os.listdir(data_path):
-                    extension = os.path.splitext(file)[1]
-                    src=os.path.join(data_path,file)
-                    dst=os.path.join(target_dir,t["id"],file)
-                    if (extension==".gz"):
-                        uncompress(src,dst[:-3])
-                    else:
-                        os.symlink(src,dst)
-                if ("template_files" in t):
-                    template_path=os.path.join(data_root,t["data"],"template",t["template_files"])
-                    for file in os.listdir(template_path):
-                        src=os.path.join(template_path,file)
-                        dst=os.path.join(target_dir,t["id"],file)
-                        template.apply_format_to_file(src,dst,t["template_instantiation"])
+        job.generate(target_dir,data_root,a)
+
     if args.command=="compute":
         computation_dir="./results/0"
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
