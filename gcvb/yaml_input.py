@@ -1,6 +1,7 @@
 import yaml
 import copy
 from . import template
+from . import util
 
 def propagate_default_value(default_dict,target_dict):
     for step in ["validation","task","test"]:
@@ -20,8 +21,7 @@ def load_yaml(yaml_file):
     Keyword arguments:
     yaml_file -- name of the file to load
     """
-    with open(yaml_file,'r') as stream:
-        original=yaml.load(stream)
+    original=util.open_yaml(yaml_file)
 
     res={}
     default_values=original.get("default_values",{})
