@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import os
 import shutil
 from ruamel.yaml import YAML
-from collections import OrderedDict
+from collections import OrderedDict,defaultdict
 
 # from data.xml create 
 def convert_xml_data(old_data,new_data):
@@ -45,11 +45,12 @@ def convert_xml_data(old_data,new_data):
             if "voDir" not in a:
                 print("{} skipped, no voDir".format(repr(a)))
                 continue
-            dst=os.path.join(new_data,current_data,"references",a["voDir"])
+            ref_dir=a["voDir"].replace("/","+")
+            dst=os.path.join(new_data,current_data,"references",ref_dir)
             try:
                 os.makedirs(dst)
             except OSError:
-                print("File {} already exists !".format(target_dir))
+                print("File {} already exists !".format(ref_dir))
             files=a["voFiles"].split(",")
             for f in files:
                 tmp=os.path.split(current_data)[0]
@@ -64,7 +65,7 @@ def convert_xml_data(old_data,new_data):
             tmp["file"]=files[0]
             if (len(files))>1:
                 print ("More than one file for id {}".format(tmp["id"]))
-            yaml_per_dir[current_data].setdefault(a["voDir"],[]).append(tmp)
+            yaml_per_dir[current_data].setdefault(ref_dir,[]).append(tmp)
     for directory,validations in yaml_per_dir.items():
         for refname,future_yaml in validations.items():
             dst=os.path.join(new_data,directory,"references",refname,"ref.yaml")
@@ -73,10 +74,24 @@ def convert_xml_data(old_data,new_data):
 
             
 
+def valid_to_new_ref_id(old_dir):
+    res=defaultdict(dict)
+    xml_input=old_dir+"/xml/valid.xml"
+    tree=ET.parse(xml_input)
+    root=tree.getroot()
+    for vogroup in root:
+        data=vogroup.attrib["data"]
+        for vo in vogroup:
+            a=vo.attrib
+            if "voDir" not in a:
+                continue
+            res[data][a["voId"]]=a["voDir"].replace("/","+")+"-"+a["voId"]
+    return res
 
 
 # takes an old tests.xml and returns a dict to be dump as a "tests.yaml"
 def convert_test(old_dir,data={}):
+    valid_d=valid_to_new_ref_id(old_dir)
     res=OrderedDict()
     res["Packs"]=[]
     xml_input=old_dir+"xml/tests.xml"
@@ -123,7 +138,7 @@ def convert_test(old_dir,data={}):
                         valid=va.strip().split("+")
                         current_validation=OrderedDict()
                         current_task["Validations"].append(current_validation)
-                        current_validation["id"]=valid[0]
+                        current_validation["id"]=valid_d[test["data"]][valid[0]]
                         current_validation["tolerance"]=valid[1]
     return res
 
