@@ -1,5 +1,6 @@
 import yaml
 import copy
+import os
 from . import template
 from . import util
 
@@ -72,3 +73,21 @@ def filter_by_tag(tests,tag):
     tag   -- the considered tag
     """
     return [x for x in tests if tag in x.get("tags",[])]
+
+def get_references(tests_cases,data_root="./"):
+    """Return a dict of references for the given testcases.
+
+    Keyword argument:
+    tests_cases -- iterable of tests_cases
+    """
+    data_dirs={t["data"] for t in tests_cases}
+    res={}
+    for d in data_dirs:
+        res[d]={}
+        ref_path=os.path.join(data_root,d,"references")
+        subfolders = [f.name for f in os.scandir(ref_path) if f.is_dir()]
+        for current_ref in subfolders:
+            tmp=util.open_yaml(os.path.join(ref_path,current_ref,"ref.yaml"))
+            for v in tmp:
+                res[d].setdefault(current_ref,{})[v["id"]]=v
+    return res
