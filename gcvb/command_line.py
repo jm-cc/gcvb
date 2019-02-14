@@ -62,6 +62,9 @@ def main():
         target_dir="./results/0"
         data_root=os.path.join(os.getcwd(),"data")
         os.makedirs(target_dir)
+        test_file=os.path.join(target_dir,"tests.yaml")
+        with open(test_file,'w') as f:
+            f.write(yaml.dump(a))
         for p in a["Packs"]:
             for t in p["Tests"]:
                 os.makedirs(os.path.join(target_dir,t["id"]))
