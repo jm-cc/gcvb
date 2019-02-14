@@ -66,11 +66,7 @@ def main():
         a=filter(args,a)
         config=util.open_yaml("config.yaml")
 
-        all_tests=[]
-        for p in a ["Packs"]:
-            for t in p["Tests"]:
-                all_tests.append(t)
-
+        all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         ref=yaml_input.get_references(all_tests,data_root)
         job_file=os.path.join(computation_dir,"job.sh")
         job.launch(all_tests, config, data_root, ref, job_file=job_file)
