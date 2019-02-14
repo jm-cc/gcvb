@@ -6,6 +6,8 @@ import gzip
 import shutil
 from . import yaml_input
 from . import template
+from . import job
+from . import util
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -22,6 +24,7 @@ def parse():
     subparsers = parser.add_subparsers(dest="command")
     parser_generate = subparsers.add_parser('generate', help="generate a new gcvb instance")
     parser_list = subparsers.add_parser('list', help="list tests (YAML)")
+    parser_compute = subparsers.add_parser('compute', help="run tests")
 
     args=parser.parse_args()
     return args
@@ -83,6 +86,21 @@ def main():
                         src=os.path.join(template_path,file)
                         dst=os.path.join(target_dir,t["id"],file)
                         template.apply_format_to_file(src,dst,t["template_instantiation"])
+    if args.command=="compute":
+        computation_dir="./results/0"
+        a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
+        a=filter(args,a)
+        data_root=os.path.join(os.getcwd(),"data")
+        config=util.open_yaml("config.yaml")
+
+        all_tests=[]
+        for p in a ["Packs"]:
+            for t in p["Tests"]:
+                all_tests.append(t)
+
+        ref=yaml_input.get_references(all_tests,data_root)
+        job_file=os.path.join(computation_dir,"job.sh")
+        job.launch(all_tests, config, data_root, ref, job_file=job_file)
 
 if __name__ == '__main__':
     main()
