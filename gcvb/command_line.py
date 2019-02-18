@@ -2,10 +2,12 @@ import argparse
 import yaml
 import re
 import os
+import sys
 from . import yaml_input
 from . import template
 from . import job
 from . import util
+from . import db
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -57,16 +59,22 @@ def main():
     if args.command=="list":
         print(yaml.dump(a))
     if args.command=="generate":
-        target_dir="./results/0"
+        if not(os.path.isfile(db.database)):
+            db.create_db()
+        gcvb_id=db.new_gcvb_instance(' '.join(sys.argv[1:]))
+        target_dir="./results/{}".format(str(gcvb_id))
         job.generate(target_dir,data_root,a)
 
     if args.command=="compute":
-        computation_dir="./results/0"
+        gcvb_id=db.get_last_gcvb()
+        run_id=db.add_run(gcvb_id)
+        computation_dir="./results/{}".format(str(gcvb_id))
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
         a=filter(args,a)
         config=util.open_yaml("config.yaml")
 
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
+        db.add_tests(run_id,all_tests)
         ref=yaml_input.get_references(all_tests,data_root)
         job_file=os.path.join(computation_dir,"job.sh")
         job.launch(all_tests, config, data_root, ref, job_file=job_file)
