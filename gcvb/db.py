@@ -99,3 +99,15 @@ def end_test(cursor, run, test_id):
     cursor.execute("""UPDATE test
                       SET end_date = CURRENT_TIMESTAMP
                       WHERE name = ? AND run_id = ?""",[test_id,run])
+
+@connection_from_computation_directory
+def add_metric(cursor, name, value):
+    for env in ["GCVB_RUN_ID","GCVB_TEST_ID"]:
+        if env not in os.environ:
+            raise Exception("Environment variable {} is not defined.".format(env))
+    test_id=os.environ["GCVB_TEST_ID"] # string as in the yaml file.
+    run_id=os.environ["GCVB_RUN_ID"] # integer id
+    cursor.execute("""SELECT id FROM test
+                      WHERE name = ? AND run_id = ?""",[test_id,run_id])
+    test_id=cursor.fetchone()["id"] #now an int
+    cursor.execute("INSERT INTO valid(metric,value,test_id) VALUES (?,?,?)",[name,value,test_id])
