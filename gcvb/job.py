@@ -46,7 +46,7 @@ def launch(tests, config, data_root, valid, *, job_file="job.sh"):
                 f.write(t["launch_command"].format(**{"@job_creation" : at_job_creation}))
                 f.write("\n")
                 for d,v in enumerate(t.get("Validations",[])):
-                    at_job_creation["va_id"]=at_job_creation["full_id"]+"_"+v["id"]
+                    at_job_creation["va_id"]=v["id"]
                     at_job_creation["va_executable"]=v["executable"]
                     tmp=v["id"].split("-")
                     v_dir,v_id=tmp[0],tmp[1]
