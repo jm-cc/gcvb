@@ -87,3 +87,15 @@ def add_run(cursor, gcvb_id):
 def add_tests(cursor, run, test_list):
     tests=[(t["id"],run) for t in test_list]
     cursor.executemany("INSERT INTO test(name,run_id) VALUES(?,?)",tests)
+
+@connection_from_computation_directory
+def start_test(cursor,run,test_id):
+    cursor.execute("""UPDATE test
+                      SET start_date = CURRENT_TIMESTAMP
+                      WHERE name = ? AND run_id = ?""",[test_id,run])
+
+@connection_from_computation_directory
+def end_test(cursor, run, test_id):
+    cursor.execute("""UPDATE test
+                      SET end_date = CURRENT_TIMESTAMP
+                      WHERE name = ? AND run_id = ?""",[test_id,run])

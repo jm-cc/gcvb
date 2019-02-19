@@ -26,6 +26,11 @@ def parse():
     parser_generate = subparsers.add_parser('generate', help="generate a new gcvb instance")
     parser_list = subparsers.add_parser('list', help="list tests (YAML)")
     parser_compute = subparsers.add_parser('compute', help="run tests")
+    parser_db = subparsers.add_parser('db', add_help=False)
+
+    parser_db.add_argument("db_command", choices=["start_test","end_test"])
+    parser_db.add_argument("run_id", type=str)
+    parser_db.add_argument("test_id", type=str)
 
     args=parser.parse_args()
     return args
@@ -77,6 +82,14 @@ def main():
         db.add_tests(run_id,all_tests)
         job_file=os.path.join(computation_dir,"job.sh")
         job.launch(all_tests, config, data_root, run_id, job_file=job_file)
+
+    if args.command=="db":
+        if args.db_command=="start_test":
+            db.start_test(args.run_id,args.test_id)
+        if args.db_command=="end_test":
+            db.end_test(args.run_id,args.test_id)
+
+
 
 if __name__ == '__main__':
     main()
