@@ -1,4 +1,5 @@
 import sqlite3
+import os
 
 #SCRIPTS
 creation_script="""
@@ -35,23 +36,33 @@ CREATE TABLE exec(id           INTEGER PRIMARY KEY,
 #GLOBAL
 database="gcvb.db"
 
+def connect(file,f, *args, **kwargs):
+    conn=sqlite3.connect(file)
+    conn.row_factory=sqlite3.Row
+    c=conn.cursor()
+    try:
+        res = f(c, *args, **kwargs) #supposed to contain execute statements.
+    except:
+        conn.rollback()
+        raise
+    else:
+        conn.commit()
+    finally:
+        conn.close()
+    return res
+
+
 def with_connection(f):
     """decorator for function needing to connect to the database"""
     def with_connection_(*args, **kwargs):
-        conn=sqlite3.connect(database)
-        conn.row_factory=sqlite3.Row
-        c=conn.cursor()
-        try:
-            res = f(c, *args, **kwargs) #supposed to contain execute statements.
-        except:
-            conn.rollback()
-            raise
-        else:
-            conn.commit()
-        finally:
-            conn.close()
-        return res
+        return connect(database,f, *args, **kwargs)
     return with_connection_
+
+def connection_from_computation_directory(f):
+    """decorator for function connecting from the computation directory"""
+    def fun_wrapper(*args, **kwargs):
+        return connect(os.path.join("..","..","..",database),f, *args, **kwargs)
+    return fun_wrapper
 
 @with_connection
 def create_db(cursor):
