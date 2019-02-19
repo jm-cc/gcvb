@@ -75,9 +75,8 @@ def main():
 
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         db.add_tests(run_id,all_tests)
-        ref=yaml_input.get_references(all_tests,data_root)
         job_file=os.path.join(computation_dir,"job.sh")
-        job.launch(all_tests, config, data_root, ref, job_file=job_file)
+        job.launch(all_tests, config, data_root, run_id, job_file=job_file)
 
 if __name__ == '__main__':
     main()

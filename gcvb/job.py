@@ -1,5 +1,6 @@
 import os
 from . import util
+from . import yaml_input
 
 def generate(target_dir,data_root,gcvb):
     """Generate computation directories
@@ -30,7 +31,8 @@ def generate(target_dir,data_root,gcvb):
                     dst=os.path.join(target_dir,t["id"],file)
                     template.apply_format_to_file(src,dst,t["template_instantiation"])
 
-def launch(tests, config, data_root, valid, *, job_file="job.sh"):
+def launch(tests, config, data_root, run_id, *, job_file="job.sh"):
+    valid=yaml_input.get_references(tests,data_root)
     with open(job_file,'w') as f:
         for test in tests:
             f.write("cd {0}\n".format(test["id"]))
