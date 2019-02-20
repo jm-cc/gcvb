@@ -28,6 +28,8 @@ def parse():
     parser_compute = subparsers.add_parser('compute', help="run tests")
     parser_db = subparsers.add_parser('db', add_help=False)
 
+    parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=db.get_last_gcvb())
+
     parser_db.add_argument("db_command", choices=["start_test","end_test"])
     parser_db.add_argument("run_id", type=str)
     parser_db.add_argument("test_id", type=str)
@@ -71,7 +73,7 @@ def main():
         job.generate(target_dir,data_root,a)
 
     if args.command=="compute":
-        gcvb_id=db.get_last_gcvb()
+        gcvb_id=args.gcvb_base
         run_id=db.add_run(gcvb_id)
         computation_dir="./results/{}".format(str(gcvb_id))
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
