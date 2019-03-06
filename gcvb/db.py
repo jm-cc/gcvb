@@ -100,6 +100,28 @@ def end_test(cursor, run, test_id):
                       SET end_date = CURRENT_TIMESTAMP
                       WHERE name = ? AND run_id = ?""",[test_id,run])
 
+@with_connection
+def start_run(cursor,run):
+    #update only if there is no start date already.
+    #Multiple launch scripts can be started, and we might not be the first.
+    cursor.execute("""UPDATE run
+                      SET start_date = CURRENT_TIMESTAMP
+                      WHERE id = ?
+                        AND start_date IS NULL""",[run])
+
+@with_connection
+def end_run(cursor,run):
+    #update only if every tests is completed.
+    #multiple scripts can be launched, we might not be the last.
+    cursor.execute("""SELECT count(*) FROM test
+                      WHERE run_id = ?
+                        AND end_date IS NULL""",[run])
+    count=cursor.fetchone()["count(*)"]
+    if not(count):
+        cursor.execute("""UPDATE run
+                          SET end_date = CURRENT_TIMESTAMP
+                          WHERE id = ?""",[run])
+
 @connection_from_computation_directory
 def add_metric(cursor, name, value):
     for env in ["GCVB_RUN_ID","GCVB_TEST_ID"]:

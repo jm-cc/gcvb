@@ -31,9 +31,11 @@ def generate(target_dir,data_root,gcvb):
                     dst=os.path.join(target_dir,t["id"],file)
                     template.apply_format_to_file(src,dst,t["template_instantiation"])
 
-def launch(tests, config, data_root, run_id, *, job_file="job.sh"):
+def launch(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
     valid=yaml_input.get_references(tests,data_root)
     with open(job_file,'w') as f:
+        f.write("python3 -m gcvb db start_run {0} -1 \n".format(run_id))
+        f.write("cd results/{0}\n".format(str(base_id)))
         for test in tests:
             f.write("\n#TEST {}\n".format(test["id"]))
             f.write("export GCVB_RUN_ID={}\n".format(str(run_id)))
@@ -64,3 +66,5 @@ def launch(tests, config, data_root, run_id, *, job_file="job.sh"):
                     f.write("\n")
             f.write("python3 -m gcvb db end_test {0} {1}\n".format(run_id,test["id"]))
             f.write("cd ..\n")
+        f.write("cd ../..\n")
+        f.write("python3 -m gcvb db end_run {0} -1 \n".format(run_id))

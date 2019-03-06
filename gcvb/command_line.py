@@ -32,7 +32,7 @@ def parse():
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
 
-    parser_db.add_argument("db_command", choices=["start_test","end_test"])
+    parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run"])
     parser_db.add_argument("run_id", type=str)
     parser_db.add_argument("test_id", type=str)
 
@@ -87,9 +87,13 @@ def main():
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         db.add_tests(run_id,all_tests)
         job_file=os.path.join(computation_dir,"job.sh")
-        job.launch(all_tests, config, data_root, run_id, job_file=job_file)
+        job.launch(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file)
 
     if args.command=="db":
+        if args.db_command=="start_run":
+            db.start_run(args.run_id)
+        if args.db_command=="end_run":
+            db.end_run(args.run_id)
         if args.db_command=="start_test":
             db.start_test(args.run_id,args.test_id)
         if args.db_command=="end_test":
