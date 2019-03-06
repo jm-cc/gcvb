@@ -30,7 +30,7 @@ def parse():
     parser_db = subparsers.add_parser('db', add_help=False)
     parser_report = subparsers.add_parser('report')
 
-    parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=db.get_last_gcvb())
+    parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
 
     parser_db.add_argument("db_command", choices=["start_test","end_test"])
     parser_db.add_argument("run_id", type=str)
@@ -76,6 +76,8 @@ def main():
 
     if args.command=="compute":
         gcvb_id=args.gcvb_base
+        if not(gcvb_id):
+            gcvb_id=db.get_last_gcvb()
         run_id=db.add_run(gcvb_id)
         computation_dir="./results/{}".format(str(gcvb_id))
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
