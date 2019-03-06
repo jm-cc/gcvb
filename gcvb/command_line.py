@@ -8,6 +8,7 @@ from . import template
 from . import job
 from . import util
 from . import db
+from . import validation
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -27,6 +28,7 @@ def parse():
     parser_list = subparsers.add_parser('list', help="list tests (YAML)")
     parser_compute = subparsers.add_parser('compute', help="run tests")
     parser_db = subparsers.add_parser('db', add_help=False)
+    parser_report = subparsers.add_parser('report')
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=db.get_last_gcvb())
 
@@ -59,7 +61,7 @@ def filter(args,data):
 def main():
     args=parse()
     data_root=os.path.abspath(args.data_root)
-    if args.command in ["list","generate"]:
+    if args.command in ["list","generate","report"]:
         a=yaml_input.load_yaml(args.yaml_file)
         a=filter(args,a)
     #Commands
@@ -91,7 +93,10 @@ def main():
         if args.db_command=="end_test":
             db.end_test(args.run_id,args.test_id)
 
-
+    if args.command=="report":
+        run_id=db.get_last_run()
+        tmp=db.load_report(run_id)
+        report=validation.Report(a,tmp)
 
 if __name__ == '__main__':
     main()

@@ -111,3 +111,21 @@ def add_metric(cursor, name, value):
                       WHERE name = ? AND run_id = ?""",[test_id,run_id])
     test_id=cursor.fetchone()["id"] #now an int
     cursor.execute("INSERT INTO valid(metric,value,test_id) VALUES (?,?,?)",[name,value,test_id])
+
+@with_connection
+def get_last_run(cursor):
+    cursor.execute("SELECT * from run ORDER BY start_date DESC LIMIT 1")
+    return cursor.fetchone()["id"]
+
+@with_connection
+def load_report(cursor, run_id):
+    a="""SELECT metric, value, name
+         FROM valid
+         INNER JOIN test
+         ON test_id=test.id
+         WHERE test.run_id=(?)"""
+    cursor.execute(a,[run_id])
+    res={}
+    for row in cursor.fetchall():
+        res.setdefault(row["name"],{})[row["metric"]]=row["value"]
+    return res
