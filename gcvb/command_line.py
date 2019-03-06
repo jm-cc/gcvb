@@ -30,8 +30,6 @@ def parse():
     parser_db = subparsers.add_parser('db', add_help=False)
     parser_report = subparsers.add_parser('report')
 
-    parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=db.get_last_gcvb())
-
     parser_db.add_argument("db_command", choices=["start_test","end_test"])
     parser_db.add_argument("run_id", type=str)
     parser_db.add_argument("test_id", type=str)
