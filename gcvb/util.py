@@ -15,3 +15,8 @@ def uncompress(file_in,file_out):
     with gzip.open(file_in, 'rb') as f_in:
         with open(file_out, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
+
+def file_to_compressed_binary(file_in):
+    with open(file_in,"rb") as f:
+        content = f.read()
+    return gzip.compress(content)

@@ -1,5 +1,7 @@
 import sqlite3
 import os
+import glob
+from . import util
 
 #SCRIPTS
 creation_script="""
@@ -31,6 +33,12 @@ CREATE TABLE exec(id           INTEGER PRIMARY KEY,
                   code_version TEXT,
                   run_id       INTEGER,
                   FOREIGN KEY(run_id) REFERENCES run(id));
+
+CREATE TABLE files(id       INTEGER PRIMARY KEY,
+                   filename TEXT,
+                   file     BLOB,
+                   test_id  INTEGER,
+                   FOREIGN KEY(test_id) REFERENCES test(id))
 """
 
 #GLOBAL
@@ -151,3 +159,13 @@ def load_report(cursor, run_id):
     for row in cursor.fetchall():
         res.setdefault(row["name"],{})[row["metric"]]=row["value"]
     return res
+
+@connection_from_computation_directory
+def save_files(cursor, run_id, test_id, file_list):
+    request="""INSERT INTO files(filename,file, test_id)
+               VALUES (?,?,?)"""
+
+    for pattern in file_list:
+        for file in glob.iglob(pattern):
+            content=util.file_to_compressed_binary(file)
+            cursor.execute(request,[file,content,test_id])
