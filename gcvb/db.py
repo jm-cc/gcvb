@@ -44,6 +44,10 @@ CREATE TABLE files(id       INTEGER PRIMARY KEY,
 #GLOBAL
 database="gcvb.db"
 
+def set_db(db_path):
+    global database
+    database=db_path
+
 def connect(file,f, *args, **kwargs):
     conn=sqlite3.connect(file)
     conn.row_factory=sqlite3.Row
@@ -65,12 +69,6 @@ def with_connection(f):
     def with_connection_(*args, **kwargs):
         return connect(database,f, *args, **kwargs)
     return with_connection_
-
-def connection_from_computation_directory(f):
-    """decorator for function connecting from the computation directory"""
-    def fun_wrapper(*args, **kwargs):
-        return connect(os.path.join("..","..","..",database),f, *args, **kwargs)
-    return fun_wrapper
 
 @with_connection
 def create_db(cursor):
@@ -96,13 +94,13 @@ def add_tests(cursor, run, test_list):
     tests=[(t["id"],run) for t in test_list]
     cursor.executemany("INSERT INTO test(name,run_id) VALUES(?,?)",tests)
 
-@connection_from_computation_directory
+@with_connection
 def start_test(cursor,run,test_id):
     cursor.execute("""UPDATE test
                       SET start_date = CURRENT_TIMESTAMP
                       WHERE name = ? AND run_id = ?""",[test_id,run])
 
-@connection_from_computation_directory
+@with_connection
 def end_test(cursor, run, test_id):
     cursor.execute("""UPDATE test
                       SET end_date = CURRENT_TIMESTAMP
@@ -130,7 +128,7 @@ def end_run(cursor,run):
                           SET end_date = CURRENT_TIMESTAMP
                           WHERE id = ?""",[run])
 
-@connection_from_computation_directory
+@with_connection
 def add_metric(cursor, run_id, test_id, name, value):
     cursor.execute("""SELECT id FROM test
                       WHERE name = ? AND run_id = ?""",[test_id,run_id])
@@ -155,7 +153,7 @@ def load_report(cursor, run_id):
         res.setdefault(row["name"],{})[row["metric"]]=row["value"]
     return res
 
-@connection_from_computation_directory
+@with_connection
 def save_files(cursor, run_id, test_id, file_list):
     request="""INSERT INTO files(filename,file, test_id)
                VALUES (?,?,?)"""

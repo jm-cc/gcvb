@@ -2,6 +2,7 @@ from . import db
 import os
 
 def add_metric(name, value):
+    db.set_db("../../../gcvb.db")
     for env in ["GCVB_RUN_ID","GCVB_TEST_ID"]:
         if env not in os.environ:
             raise Exception("Environment variable {} is not defined.".format(env))

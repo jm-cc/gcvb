@@ -102,8 +102,10 @@ def main():
         if args.db_command=="end_run":
             db.end_run(args.run_id)
         if args.db_command=="start_test":
+            db.set_db("../../../gcvb.db")
             db.start_test(args.run_id,args.test_id)
         if args.db_command=="end_test":
+            db.set_db("../../../gcvb.db")
             db.end_test(args.run_id,args.test_id)
             a=yaml_input.load_yaml("../tests.yaml")
             t=get_test_in_a_base(a,args.test_id)
