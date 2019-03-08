@@ -39,7 +39,7 @@ def parse():
     args=parser.parse_args()
     return args
 
-def filter(args,data):
+def filter_tests(args,data):
     if (args.filter_by_pack):
         data["Packs"]=[p for p in data["Packs"] if re.match(args.filter_by_pack,p["pack_id"])]
     if (args.filter_by_test_id):
@@ -70,7 +70,7 @@ def main():
     data_root=os.path.abspath(args.data_root)
     if args.command in ["list","generate","report"]:
         a=yaml_input.load_yaml(args.yaml_file)
-        a=filter(args,a)
+        a=filter_tests(args,a)
     #Commands
     if args.command=="list":
         print(yaml.dump(a))
@@ -88,7 +88,7 @@ def main():
         run_id=db.add_run(gcvb_id)
         computation_dir="./results/{}".format(str(gcvb_id))
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
-        a=filter(args,a)
+        a=filter_tests(args,a)
         config=util.open_yaml("config.yaml")
 
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
