@@ -25,25 +25,26 @@ class Report:
                     continue
                 validation_type=valid.get("type","file_comparison")
                 if validation_type=="file_comparison":
-                    t=float(test[validation_metric])<=float(valid["tolerance"])
-                    self.__within_tolerance(t,test_id,valid["id"])
+                    t=float(test[validation_metric])
+                    self.__within_tolerance(t,test_id,valid)
                 elif validation_type=="configuration_independent":
                     rel_change=relative_change(float(test[validation_metric]),float(valid["reference"]))
-                    t=abs(rel_change)<=float(valid["tolerance"])
-                    self.__within_tolerance(t,test_id,valid["id"])
+                    t=abs(rel_change)
+                    self.__within_tolerance(t,test_id,valid)
                 elif validation_type=="configuration_dependent":
                     if configuration in valid["reference"]:
                         rel_change=relative_change(float(test[validation_metric]),float(valid["reference"][configuration]))
-                        t=abs(rel_change)<=float(valid["tolerance"])
-                        self.__within_tolerance(t,test_id,valid["id"])
+                        t=abs(rel_change)
+                        self.__within_tolerance(t,test_id,valid)
                 else:
                     raise ValueError("Unknown validation type \"%s\". Should be in (file_comparison,configuration_independent,configuration_dependent)" % validation_type)
 
-    def __within_tolerance(self,test,test_id,valid_id):
-        if (test):
-            self.success.setdefault(test_id,[]).append(valid_id)
+    def __within_tolerance(self,test_value,test_id,valid):
+        res={"id" : valid["id"], "tolerance" : valid["tolerance"], "distance" : test_value}
+        if (test_value<=float(valid["tolerance"])):
+            self.success.setdefault(test_id,[]).append(res)
         else:
-            self.failure.setdefault(test_id,[]).append(valid_id)
+            self.failure.setdefault(test_id,[]).append(res)
 
     def is_success(self):
         return not(self.missing_validations or self.failure)
