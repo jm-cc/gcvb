@@ -3,6 +3,7 @@ import yaml
 import re
 import os
 import sys
+import pprint
 from . import yaml_input
 from . import template
 from . import job
@@ -114,8 +115,20 @@ def main():
 
     if args.command=="report":
         run_id=db.get_last_run()
+        #Is the run finished ?
+        tests=db.get_tests(run_id)
+        completed_tests=list(filter(lambda x: x["end_date"], tests))
+        print("Tests completed : {!s}/{!s}".format(len(completed_tests),len(tests)))
+
         tmp=db.load_report(run_id)
         report=validation.Report(a,tmp)
+        if report.is_success():
+            print("Success!")
+        else:
+            failed=report.get_failed_tests()
+            print("{!s} failure(s) : {!s}".format(len(failed),list(failed)))
+            print("Details of failures :")
+            pprint.pprint(report.failure)
 
 if __name__ == '__main__':
     main()

@@ -162,3 +162,11 @@ def save_files(cursor, run_id, test_id, file_list):
         for file in glob.iglob(pattern):
             content=util.file_to_compressed_binary(file)
             cursor.execute(request,[file,content,test_id])
+
+@with_connection
+def get_tests(cursor, run_id):
+    request="""SELECT name, start_date, end_date
+               FROM test
+               WHERE run_id = ?"""
+    cursor.execute(request, [run_id])
+    return cursor.fetchall()
