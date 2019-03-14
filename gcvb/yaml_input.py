@@ -55,7 +55,9 @@ def load_yaml(yaml_file):
             if test.get("type","simple")=="template":
                 generated_tests=template.generate_dict_list(test["template_instantiation"])
                 for t in generated_tests:
-                    current_test=template.apply_instantiation(test,t)
+                    tmp=dict(t)
+                    tmp["@job_creation"]=template.job_creation_dict()
+                    current_test=template.apply_instantiation(test,tmp)
                     del current_test["template_instantiation"]
                     del current_test["type"]
                     current_test["template_instantiation"]=t

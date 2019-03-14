@@ -30,7 +30,9 @@ def generate(target_dir,data_root,gcvb):
                 for file in os.listdir(template_path):
                     src=os.path.join(template_path,file)
                     dst=os.path.join(target_dir,t["id"],file)
-                    template.apply_format_to_file(src,dst,t["template_instantiation"])
+                    format_dic=t["template_instantiation"].copy()
+                    format_dic["@job_creation"]=template.job_creation_dict()
+                    template.apply_format_to_file(src,dst,format_dic)
 
 def launch(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
     valid=yaml_input.get_references(tests,data_root)

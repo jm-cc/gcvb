@@ -1,3 +1,10 @@
+class job_creation_dict(dict):
+    def __missing__(self, key):
+        if key in ["nthreads","nprocs","full_id","executable","executable","options","va_id","va_executable","va_filename","va_refdir","va_executable"]:
+            return "{{@job_creation[{}]}}".format(key)
+        else:
+            raise KeyError(key)
+
 def fill_current_key(e,current_key,current_dict):
     res=current_dict.copy()
     res[current_key]=e
@@ -46,7 +53,7 @@ def apply_instantiation(tpl,format_dict):
             instance.append(apply_instantiation(e,format_dict))
         return instance
     elif isinstance(tpl,str):
-        return tpl.format(**format_dict)
+        return tpl.format_map(format_dict)
     else:
         return tpl
 
@@ -60,4 +67,4 @@ def apply_format_to_file(input_file, output_file, format_dict):
     """
     with open(input_file, 'r') as f_in, open(output_file, 'w') as f_out:
         for line in f_in:
-            f_out.write(line.format(**format_dict))
+            f_out.write(line.format_map(format_dict))
