@@ -1,6 +1,7 @@
 import os
 from . import util
 from . import yaml_input
+from . import template
 
 def generate(target_dir,data_root,gcvb):
     """Generate computation directories
