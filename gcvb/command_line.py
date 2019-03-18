@@ -29,7 +29,7 @@ def parse():
     parser_list = subparsers.add_parser('list', help="list tests (YAML)")
     parser_compute = subparsers.add_parser('compute', help="run tests")
     parser_db = subparsers.add_parser('db', add_help=False)
-    parser_report = subparsers.add_parser('report')
+    parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
 
