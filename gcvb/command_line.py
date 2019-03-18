@@ -69,7 +69,7 @@ def get_test_in_a_base(base,test_id):
 def main():
     args=parse()
     data_root=os.path.abspath(args.data_root)
-    if args.command in ["list","generate","report"]:
+    if args.command in ["list","generate"]:
         a=yaml_input.load_yaml(args.yaml_file)
         a=filter_tests(args,a)
     #Commands
@@ -114,7 +114,10 @@ def main():
                 db.save_files(args.run_id,args.test_id,t["keep"])
 
     if args.command=="report":
-        run_id=db.get_last_run()
+        run_id,gcvb_id=db.get_last_run()
+        computation_dir="./results/{}".format(str(gcvb_id))
+        a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
+
         #Is the run finished ?
         tests=db.get_tests(run_id)
         completed_tests=list(filter(lambda x: x["end_date"], tests))
