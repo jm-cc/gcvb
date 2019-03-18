@@ -7,6 +7,7 @@ from . import util
 creation_script="""
 CREATE TABLE gcvb(id            INTEGER PRIMARY KEY,
                   command_line  TEXT,
+                  yaml_file     TEXT,
                   creation_date INTEGER);
 
 CREATE TABLE run(id         INTEGER PRIMARY KEY,
@@ -75,8 +76,8 @@ def create_db(cursor):
     cursor.executescript(creation_script)
 
 @with_connection
-def new_gcvb_instance(cursor, command_line):
-    cursor.execute("INSERT INTO gcvb(command_line,creation_date) VALUES (?,CURRENT_TIMESTAMP)",[command_line])
+def new_gcvb_instance(cursor, command_line, yaml_file):
+    cursor.execute("INSERT INTO gcvb(command_line,yaml_file,creation_date) VALUES (?,?,CURRENT_TIMESTAMP)",[yaml_file,command_line])
     return cursor.lastrowid
 
 @with_connection

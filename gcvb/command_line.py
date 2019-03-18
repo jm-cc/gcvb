@@ -78,7 +78,7 @@ def main():
     if args.command=="generate":
         if not(os.path.isfile(db.database)):
             db.create_db()
-        gcvb_id=db.new_gcvb_instance(' '.join(sys.argv[1:]))
+        gcvb_id=db.new_gcvb_instance(args.yaml_file,' '.join(sys.argv[1:]))
         target_dir="./results/{}".format(str(gcvb_id))
         job.generate(target_dir,data_root,a)
 
