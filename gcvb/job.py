@@ -37,14 +37,14 @@ def generate(target_dir,data_root,gcvb):
 def launch(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
     valid=yaml_input.get_references(tests,data_root)
     with open(job_file,'w') as f:
-        f.write("python3 -m gcvb db start_run {0} -1 \n".format(run_id))
+        f.write("python3 -m gcvb db start_run {0} -1 -1 \n".format(run_id))
         f.write("cd results/{0}\n".format(str(base_id)))
         for test in tests:
             f.write("\n#TEST {}\n".format(test["id"]))
-            f.write("export GCVB_RUN_ID={}\n".format(str(run_id)))
-            f.write("export GCVB_TEST_ID={}\n".format(test["id"]))
+            f.write("export GCVB_RUN_ID={!s}\n".format(run_id))
+            f.write("export GCVB_TEST_ID={!s}\n".format(test["id_db"]))
             f.write("cd {0}\n".format(test["id"]))
-            f.write("python3 -m gcvb db start_test {0} {1}\n".format(run_id,test["id"]))
+            f.write("python3 -m gcvb db start_test {0} {1} {2}\n".format(run_id,test["id_db"],test["id"]))
             for c,t in enumerate(test["Tasks"]):
                 at_job_creation={}
                 at_job_creation["nthreads"]=t["nthreads"]
@@ -67,7 +67,7 @@ def launch(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
                         at_job_creation["va_executable"]=config["executables"][v["executable"]]
                     f.write(v["launch_command"].format(**{"@job_creation" : at_job_creation}))
                     f.write("\n")
-            f.write("python3 -m gcvb db end_test {0} {1}\n".format(run_id,test["id"]))
+            f.write("python3 -m gcvb db end_test {0} {1} {2}\n".format(run_id,test["id_db"],test["id"]))
             f.write("cd ..\n")
         f.write("cd ../..\n")
-        f.write("python3 -m gcvb db end_run {0} -1 \n".format(run_id))
+        f.write("python3 -m gcvb db end_run {0} -1 -1 \n".format(run_id))

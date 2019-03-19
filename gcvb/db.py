@@ -93,19 +93,21 @@ def add_run(cursor, gcvb_id):
 @with_connection
 def add_tests(cursor, run, test_list):
     tests=[(t["id"],run) for t in test_list]
-    cursor.executemany("INSERT INTO test(name,run_id) VALUES(?,?)",tests)
+    for t in test_list:
+        cursor.execute("INSERT INTO test(name,run_id) VALUES(?,?)",[t["id"],run])
+        t["id_db"]=cursor.lastrowid
 
 @with_connection
 def start_test(cursor,run,test_id):
     cursor.execute("""UPDATE test
                       SET start_date = CURRENT_TIMESTAMP
-                      WHERE name = ? AND run_id = ?""",[test_id,run])
+                      WHERE id = ? AND run_id = ?""",[test_id,run])
 
 @with_connection
 def end_test(cursor, run, test_id):
     cursor.execute("""UPDATE test
                       SET end_date = CURRENT_TIMESTAMP
-                      WHERE name = ? AND run_id = ?""",[test_id,run])
+                      WHERE id = ? AND run_id = ?""",[test_id,run])
 
 @with_connection
 def start_run(cursor,run):
@@ -131,9 +133,6 @@ def end_run(cursor,run):
 
 @with_connection
 def add_metric(cursor, run_id, test_id, name, value):
-    cursor.execute("""SELECT id FROM test
-                      WHERE name = ? AND run_id = ?""",[test_id,run_id])
-    test_id=cursor.fetchone()["id"] #now an int
     cursor.execute("INSERT INTO valid(metric,value,test_id) VALUES (?,?,?)",[name,value,test_id])
 
 @with_connection
