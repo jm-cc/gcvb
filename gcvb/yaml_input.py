@@ -28,6 +28,7 @@ def load_yaml(yaml_file):
     default_values=original.get("default_values",{})
     #res["default_values"]=default_values
     res["Packs"]=[]
+    res["Tests"]={}
 
     for pack in original["Packs"]:
         pack.setdefault("default_values",{})
@@ -65,6 +66,7 @@ def load_yaml(yaml_file):
             else:
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
+            res["Tests"][current_test["id"]]=current_test
     return res
 
 def filter_by_tag(tests,tag):

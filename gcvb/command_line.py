@@ -61,13 +61,6 @@ def filter_tests(args,data):
             e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))!=set())]
     return data
 
-def get_test_in_a_base(base,test_id):
-    for p in base["Packs"]:
-        for t in p["Tests"]:
-            if t["id"]==test_id:
-                return t
-    raise ValueError("Test not present in base.")
-
 def main():
     args=parse()
     data_root=os.path.abspath(args.data_root)
@@ -111,7 +104,7 @@ def main():
             db.set_db("../../../gcvb.db")
             db.end_test(args.run_id,args.test_db_id)
             a=yaml_input.load_yaml("../tests.yaml")
-            t=get_test_in_a_base(a,args.test_id)
+            t=a["Tests"][args.test_id]
             if "keep" in t:
                 db.save_files(args.run_id,args.test_db_id,t["keep"])
 
