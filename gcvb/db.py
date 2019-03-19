@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import glob
+import gzip
 from . import util
 
 #SCRIPTS
@@ -171,3 +172,22 @@ def get_tests(cursor, run_id):
                WHERE run_id = ?"""
     cursor.execute(request, [run_id])
     return cursor.fetchall()
+
+@with_connection
+def get_file_list(cursor, run_id, test_name):
+    request="""SELECT filename
+               FROM files
+               INNER JOIN test ON test_id=test.id
+               WHERE run_id = ? AND test.name = ?"""
+    cursor.execute(request,[run_id,test_name])
+    res=cursor.fetchall()
+    return [f["filename"] for f in res]
+
+@with_connection
+def retrieve_file(cursor, run_id, test_name, filename):
+    request="""SELECT file
+               FROM files
+               INNER JOIN test ON test_id=test.id
+               WHERE run_id = ? AND test.name = ? AND filename = ?"""
+    cursor.execute(request, [run_id,test_name, filename])
+    return gzip.decompress(cursor.fetchone()["file"])
