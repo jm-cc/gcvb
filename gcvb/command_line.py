@@ -117,12 +117,19 @@ def main():
         tests=db.get_tests(run_id)
         completed_tests=list(filter(lambda x: x["end_date"], tests))
         print("Tests completed : {!s}/{!s}".format(len(completed_tests),len(tests)))
+        finished=(len(completed_tests)==len(tests))
 
         tmp=db.load_report(run_id)
         report=validation.Report(a,tmp)
         if report.is_success():
-            print("Success!")
+            if finished:
+                print("Success!")
+            else:
+                print("No failure yet, computation in progress...")
         else:
+            if report.missing_validations:
+                print("Some validation metrics are missing :")
+                pprint.pprint(report.missing_validations)
             failed=report.get_failed_tests()
             print("{!s} failure(s) : {!s}".format(len(failed),list(failed)))
             print("Details of failures :")
