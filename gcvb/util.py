@@ -1,15 +1,19 @@
 import yaml
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 import gzip
 import shutil
 
 def open_yaml(filename):
     with open(filename,'r') as stream:
-        res=yaml.load(stream)
+        res=yaml.load(stream, Loader=Loader)
     return res
 
 def write_yaml(struct,filename):
     with open(filename,'w') as f:
-        f.write(yaml.dump(struct))
+        f.write(yaml.dump(struct,Dumper=Dumper))
 
 def uncompress(file_in,file_out):
     with gzip.open(file_in, 'rb') as f_in:
