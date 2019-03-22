@@ -1,4 +1,5 @@
 import os
+import subprocess
 from . import util
 from . import yaml_input
 from . import template
@@ -34,7 +35,7 @@ def generate(target_dir,data_root,gcvb):
                     format_dic["@job_creation"]=template.job_creation_dict()
                     template.apply_format_to_file(src,dst,format_dic)
 
-def launch(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
+def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
     valid=yaml_input.get_references(tests,data_root)
     with open(job_file,'w') as f:
         f.write("python3 -m gcvb db start_run {0} -1 -1 \n".format(run_id))
@@ -71,3 +72,6 @@ def launch(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
             f.write("cd ..\n")
         f.write("cd ../..\n")
         f.write("python3 -m gcvb db end_run {0} -1 -1 \n".format(run_id))
+
+def launch(job_file, config):
+    subprocess.Popen([config["submit_command"], job_file])

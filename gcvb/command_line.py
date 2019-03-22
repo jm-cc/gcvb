@@ -90,7 +90,9 @@ def main():
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         db.add_tests(run_id,all_tests)
         job_file=os.path.join(computation_dir,"job.sh")
-        job.launch(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file)
+        job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file)
+        job.launch(job_file,config)
+
 
     if args.command=="db":
         if args.db_command=="start_run":
