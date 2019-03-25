@@ -10,12 +10,14 @@ from . import job
 from . import util
 from . import db
 from . import validation
+import importlib
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
 
     #filters options
     parser.add_argument('--yaml-file',metavar="filename",default="test.yaml")
+    parser.add_argument('--modifier',metavar="python_module")
     parser.add_argument('--data-root',metavar="dir",default=os.path.join(os.getcwd(),"data"))
     parser.add_argument('--filter-by-pack',metavar="regexp",help="Regexp to select packs")
     parser.add_argument('--filter-by-test-id',metavar="regexp",help="Regexp to select jobs by test-id")
@@ -66,6 +68,9 @@ def main():
     data_root=os.path.abspath(args.data_root)
     if args.command in ["list","generate"]:
         a=yaml_input.load_yaml(args.yaml_file)
+        if (args.modifier):
+            mod=importlib.import_module(args.modifier)
+            a=mod.modify(a)
         a=filter_tests(args,a)
     #Commands
     if args.command=="list":
