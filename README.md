@@ -13,6 +13,10 @@ Clone this repository and in the directory run :
 pip3 install .
 ```
 
+## Getting started
+
+As of today, the documentation is mainly available under the form of examples in the [gcvb-example repository](https://github.com/jm-cc/gcvb-examples).
+
 ## Copyright and license
 
 Copyright 2019 Airbus S.A.S
