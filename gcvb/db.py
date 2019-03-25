@@ -30,12 +30,6 @@ CREATE TABLE valid(id      INTEGER PRIMARY KEY,
                    test_id INTEGER,
                    FOREIGN KEY(test_id) REFERENCES test(id));
 
-CREATE TABLE exec(id           INTEGER PRIMARY KEY,
-                  exec_name    TEXT,                      -- from config.yaml
-                  code_version TEXT,
-                  run_id       INTEGER,
-                  FOREIGN KEY(run_id) REFERENCES run(id));
-
 CREATE TABLE files(id       INTEGER PRIMARY KEY,
                    filename TEXT,
                    file     BLOB,
