@@ -27,7 +27,7 @@ def generate(target_dir,data_root,gcvb):
                 else:
                     os.symlink(src,dst)
             if ("template_files" in t):
-                template_path=os.path.join(data_root,t["data"],"template",t["template_files"])
+                template_path=os.path.join(data_root,t["data"],"templates",t["template_files"])
                 for file in os.listdir(template_path):
                     src=os.path.join(template_path,file)
                     dst=os.path.join(target_dir,t["id"],file)
