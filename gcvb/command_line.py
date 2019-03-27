@@ -32,6 +32,7 @@ def parse():
     parser_compute = subparsers.add_parser('compute', help="run tests")
     parser_db = subparsers.add_parser('db', add_help=False)
     parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
+    parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
 
@@ -141,6 +142,10 @@ def main():
             print("{!s} failure(s) : {!s}".format(len(failed),list(failed)))
             print("Details of failures :")
             pprint.pprint(report.failure)
+
+    if args.command=="dashboard":
+        from . import dashboard
+        dashboard.run_server()
 
 if __name__ == '__main__':
     main()
