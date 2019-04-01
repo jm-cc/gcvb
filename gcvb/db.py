@@ -15,6 +15,7 @@ CREATE TABLE run(id         INTEGER PRIMARY KEY,
                  start_date INTEGER,
                  end_date   INTEGER,
                  gcvb_id    INTEGER,
+                 config_id  TEXT,
                  FOREIGN KEY(gcvb_id) REFERENCES gcvb(id));
 
 CREATE TABLE test(id         INTEGER PRIMARY KEY,
@@ -81,8 +82,8 @@ def get_last_gcvb(cursor):
     return cursor.fetchone()["id"]
 
 @with_connection
-def add_run(cursor, gcvb_id):
-    cursor.execute("INSERT INTO run(gcvb_id) VALUES (?)",[gcvb_id])
+def add_run(cursor, gcvb_id, config_id):
+    cursor.execute("INSERT INTO run(gcvb_id,config_id) VALUES (?,?)",[gcvb_id,config_id])
     return cursor.lastrowid
 
 @with_connection

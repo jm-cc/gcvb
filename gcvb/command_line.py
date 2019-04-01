@@ -85,13 +85,14 @@ def main():
 
     if args.command=="compute":
         gcvb_id=args.gcvb_base
+        config=util.open_yaml("config.yaml")
+        config_id=config.get("machine_id")
         if not(gcvb_id):
             gcvb_id=db.get_last_gcvb()
-        run_id=db.add_run(gcvb_id)
+        run_id=db.add_run(gcvb_id,config_id)
         computation_dir="./results/{}".format(str(gcvb_id))
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
         a=filter_tests(args,a)
-        config=util.open_yaml("config.yaml")
 
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         db.add_tests(run_id,all_tests)
