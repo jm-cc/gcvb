@@ -9,6 +9,7 @@ creation_script="""
 CREATE TABLE gcvb(id            INTEGER PRIMARY KEY,
                   command_line  TEXT,
                   yaml_file     TEXT,
+                  modifier      TEXT,
                   creation_date INTEGER);
 
 CREATE TABLE run(id         INTEGER PRIMARY KEY,
@@ -186,3 +187,12 @@ def retrieve_file(cursor, run_id, test_name, filename):
                WHERE run_id = ? AND test.name = ? AND filename = ?"""
     cursor.execute(request, [run_id,test_name, filename])
     return gzip.decompress(cursor.fetchone()["file"])
+
+@with_connection
+def retrieve_input(cursor, run):
+    request="""SELECT yaml_file, modifier
+               FROM gcvb
+               INNER JOIN run ON gcvb.id=run.gcvb_id
+               WHERE run.id=?"""
+    res=cursor.fetchone()
+    return (res["yaml_file"],res["modifier"])

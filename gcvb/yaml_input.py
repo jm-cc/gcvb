@@ -4,6 +4,7 @@ import os
 import importlib
 from . import template
 from . import util
+from . import db
 
 def propagate_default_value(default_dict,target_dict):
     for step in ["validation","task","test"]:
@@ -99,3 +100,8 @@ def get_references(tests_cases,data_root="./"):
             for v in tmp:
                 res[d].setdefault(current_ref,{})[v["id"]]=v
     return res
+
+def load_yaml_from_run(run_id):
+    ya,mod=db.retrieve_input(run_id)
+    print(ya,mod)
+    return load_yaml(ya,mod)
