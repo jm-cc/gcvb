@@ -5,17 +5,18 @@ from dash.dependencies import Input, Output
 
 if __name__ == '__main__':
     from app import app
-    from apps import runs
+    from apps import runs, run
 else:
     from .app import app
-    from .apps import runs
+    from .apps import runs, run
 
 url =  dcc.Location(id='url', refresh=False)
 
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Runs", href="runs")),
-        dbc.NavItem(dbc.NavLink("Data", href="data")),
+        dbc.NavItem(dbc.NavLink("Runs", href="/runs")),
+        dbc.NavItem(dbc.NavLink("Last run", href="/run")),
+        dbc.NavItem(dbc.NavLink("Data", href="/data")),
 
     ],
     brand="gcvb-dashboard",
@@ -31,8 +32,13 @@ app.layout=html.Div([url, navbar, content])
               [Input('url', 'pathname')])
 
 def display_page(pathname):
-    if pathname == '/runs':
-         return runs.layout
+    if not pathname:
+        return 'Bonjour'
+    page=pathname.split("/")
+    if page[1] == 'runs':
+        return runs.layout
+    if page[1] == 'run':
+        return run.layout
     else:
         return 'Bonjour'
 
