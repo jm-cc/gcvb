@@ -45,7 +45,7 @@ def Table(report, columns=None):
 #Page Generator
 def gen_page(run_id, gcvb_id):
     computation_dir="./results/{}".format(str(gcvb_id))
-    a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
+    a=yaml_input.load_yaml_from_run(run_id)
     r=db.load_report(run_id)
     report = val.Report(a,r)
     data = data_preparation(report, a)
