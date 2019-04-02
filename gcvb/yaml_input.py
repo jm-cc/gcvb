@@ -1,6 +1,7 @@
 import yaml
 import copy
 import os
+import importlib
 from . import template
 from . import util
 
@@ -16,7 +17,7 @@ def set_default_value(default_dict,target_dict):
         if k not in target_dict:
             target_dict[k]=v
 
-def load_yaml(yaml_file):
+def load_yaml(yaml_file, modifier=None):
     """Load a yaml file and generate the corresponding gcvb dictionary
 
     Keyword arguments:
@@ -67,6 +68,9 @@ def load_yaml(yaml_file):
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
             res["Tests"][current_test["id"]]=current_test
+    if (modifier):
+        mod=importlib.import_module(modifier)
+        res=mod.modify(res)
     return res
 
 def filter_by_tag(tests,tag):
