@@ -103,5 +103,4 @@ def get_references(tests_cases,data_root="./"):
 
 def load_yaml_from_run(run_id):
     ya,mod=db.retrieve_input(run_id)
-    print(ya,mod)
     return load_yaml(ya,mod)

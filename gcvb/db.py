@@ -194,5 +194,6 @@ def retrieve_input(cursor, run):
                FROM gcvb
                INNER JOIN run ON gcvb.id=run.gcvb_id
                WHERE run.id=?"""
+    cursor.execute(request, [run])
     res=cursor.fetchone()
     return (res["yaml_file"],res["modifier"])
