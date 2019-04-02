@@ -5,15 +5,21 @@ import gcvb.validation as val
 import gcvb.db as db
 import gcvb.yaml_input as yaml_input
 import os
+if __name__ == '__main__':
+    from app import app
+else:
+    from ..app import app
+from dash.dependencies import Input, Output
+
 
 # Data
-def data_preparation(report):
+def data_preparation(report, ya):
     res={"id" : [], "description" : [], "result" : []}
     for test_id,test in sorted(report.validation_base.items()):
         if test_id not in report.status:
             continue
         res["id"].append(test_id)
-        res["description"].append(a["Tests"][test_id].get("description")) # to be changed
+        res["description"].append(ya["Tests"][test_id].get("description")) # to be changed
         res["result"].append(report.status[test_id])
     return res
 
@@ -36,15 +42,31 @@ def Table(report, columns=None):
     return html.Table([html.Tr([html.Th(col) for col in columns])] + rows,
                       className="table table-hover table-bordered table-sm")
 
-run_id,gcvb_id=db.get_last_run()
-computation_dir="./results/{}".format(str(gcvb_id))
-a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
-r=db.load_report(run_id)
+#Page Generator
+def gen_page(run_id, gcvb_id):
+    computation_dir="./results/{}".format(str(gcvb_id))
+    a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
+    r=db.load_report(run_id)
+    report = val.Report(a,r)
+    data = data_preparation(report, a)
+    layout = dbc.Container([html.H1("Run"),Table(data,["id","description","result"])])
+    return layout
 
-report = val.Report(a,r)
-data = data_preparation(report)
+layout = html.Div(id="run-content")
 
-layout = dbc.Container([html.H1("Run"),Table(data,["id","description","result"])])
+@app.callback(Output('run-content', 'children'),
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    if not pathname:
+        return 'Bonjour'
+    page=pathname.split("/")
+    run_id,gcvb_id=db.get_last_run() # Problem when multiple gcvb base exists. TODO
+    if len(page)>2:
+        run_id=int(page[2])
+        #gcvb_id= ??? # TODO ! It is not correct
+        return gen_page(run_id,gcvb_id)
+    else:
+        return gen_page(run_id,gcvb_id)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
