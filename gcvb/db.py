@@ -197,3 +197,18 @@ def retrieve_input(cursor, run):
     cursor.execute(request, [run])
     res=cursor.fetchone()
     return (res["yaml_file"],res["modifier"])
+
+@with_connection
+def retrieve_test(cursor, run, test_id):
+    request="""SELECT id, start_date, end_date
+               FROM test
+               WHERE name=? AND run_id=?"""
+    cursor.execute(request,[test_id,run])
+    res=dict(cursor.fetchone())
+    request="""SELECT metric, value
+               FROM valid
+               WHERE test_id=?"""
+    cursor.execute(request,[res["id"]])
+    metrics=cursor.fetchall()
+    res["metrics"]={m["metric"]:m["value"] for m in metrics}
+    return res

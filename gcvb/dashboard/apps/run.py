@@ -11,7 +11,6 @@ else:
     from ..app import app
 from dash.dependencies import Input, Output
 
-
 # Data
 def data_preparation(report, ya):
     res={"id" : [], "description" : [], "result" : []}
@@ -24,7 +23,7 @@ def data_preparation(report, ya):
     return res
 
 # View
-def Table(report, columns=None):
+def Table(report, run_id, columns=None):
     rows = []
     if not columns:
         columns = report.keys()
@@ -33,7 +32,7 @@ def Table(report, columns=None):
         for col in columns:
             value = report[col][i]
             if col == 'id':
-                cell = html.Td(html.A(href="/test/"+value, children=value))
+                cell = html.Td(html.A(href="/test/"+str(run_id)+"/"+value, children=value))
             else:
                 cell = html.Td(children=value)
             row.append(cell)
@@ -49,7 +48,7 @@ def gen_page(run_id, gcvb_id):
     r=db.load_report(run_id)
     report = val.Report(a,r)
     data = data_preparation(report, a)
-    layout = dbc.Container([html.H1("Run"),Table(data,["id","description","result"])])
+    layout = dbc.Container([html.H1("Run"),Table(data,run_id,["id","description","result"])])
     return layout
 
 layout = html.Div(id="run-content")
