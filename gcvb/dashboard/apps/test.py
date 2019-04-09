@@ -13,8 +13,38 @@ from dash.dependencies import Input, Output
 
 #Data
 def data_preparation(run, test_id):
-    tmp=db.retrieve_test(run,test_id)
-    return str(tmp)
+    run_summary=db.retrieve_test(run,test_id)
+    base=yaml_input.load_yaml_from_run(run)
+    return str(base["Tests"][test_id])
+
+#Content
+def summary_panel(data):
+    #Lines of the table
+    description_line=html.Tr([html.Th("Description"),html.Td(data["description"])])
+    result_line=html.Tr([html.Th("Result"),(html.Td(data["result"]))])
+    time_line=html.Tr([html.Th("Elapsed time (s)"),(html.Td(data["time"]))])
+
+    #Table
+    table=html.Table(html.Tbody([description_line,result_line,time_line]), className="table table-sm")
+
+    #Panel
+    panel_header=html.Div(html.H3("Summary",className="panel-title"),className="panel panel-heading")
+    panel=html.Div([panel_header,table],className="panel panel-default")
+
+
+    return dbc.Container([panel])
+
+#Page Generator
+def gen_page(run_id, test_id):
+    run_summary=db.retrieve_test(run_id,test_id)
+    base=yaml_input.load_yaml_from_run(run_id)
+
+    data={}
+    data["description"]="Fake description"
+    data["result"]="Success!"
+    data["time"]="666"
+    return summary_panel(data)
+
 
 #Page
 layout = html.Div(id="test-content")
@@ -26,4 +56,4 @@ def display_page(pathname):
     if len(page)<4:
         return '404'
     run,test_id=page[2],page[3]
-    return data_preparation(run,test_id)
+    return gen_page(run,test_id)
