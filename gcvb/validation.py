@@ -27,7 +27,7 @@ class Report:
                     if self.status[test_id]!="failure":
                         self.status[test_id]="missing_validation"
                     continue
-                validation_type=valid.get("type","file_comparison")
+                validation_type=valid.setdefault("type","file_comparison")
                 if validation_type=="file_comparison":
                     t=float(test[validation_metric])
                     self.__within_tolerance(t,test_id,valid)
@@ -44,7 +44,7 @@ class Report:
                     raise ValueError("Unknown validation type \"%s\". Should be in (file_comparison,configuration_independent,configuration_dependent)" % validation_type)
 
     def __within_tolerance(self,test_value,test_id,valid):
-        res={"id" : valid["id"], "tolerance" : valid["tolerance"], "distance" : test_value}
+        res={"id" : valid["id"], "tolerance" : valid["tolerance"], "distance" : test_value, "type" : valid["type"]}
         if (test_value<=float(valid["tolerance"])):
             self.success.setdefault(test_id,[]).append(res)
         else:
