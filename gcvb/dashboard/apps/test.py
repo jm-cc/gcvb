@@ -42,8 +42,8 @@ def data_preparation(run, test_id):
     return data
 
 #Content
-def metric_table(list_of_metrics):
-    h=[("Metric","55%"),("Type","25%"),("Distance","10%"),("Target","10%")]
+def metric_table(test_id,list_of_metrics):
+    h=[("Metric","55%"),("Type","25%"),("Distance","8%"),("Target","8%"),("H","2%")]
     header=html.Tr([html.Th(col, style={"width" : width}) for col,width in h])
 
     rows = []
@@ -52,6 +52,10 @@ def metric_table(list_of_metrics):
         for col in ["id", "type", "distance", "tolerance"]:
             cell = html.Td(m[col])
             row.append(cell)
+        #link to history
+        link="/history/{}/{}".format(test_id,m["id"])
+        cell = html.Td(html.A(href=link, children="H"))
+        row.append(cell)
 
         style=""
         if (m["distance"]=="N/A"):
@@ -71,7 +75,7 @@ def details_panel(data):
     for c,t in enumerate(data["Tasks"], 1):
         el_list.append(html.H6("{!s} - {} {}".format(c,t["executable"],t["options"])))
         if t["metrics"]:
-            el_list.append(metric_table(t["metrics"]))
+            el_list.append(metric_table(data["test_id"],t["metrics"]))
     return html.Div([html.H5("Details"),*el_list])
 
 #Page Generator

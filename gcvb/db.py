@@ -212,3 +212,13 @@ def retrieve_test(cursor, run, test_id):
     metrics=cursor.fetchall()
     res["metrics"]={m["metric"]:m["value"] for m in metrics}
     return res
+
+@with_connection
+def retrieve_history(cursor, test_id, metric_id):
+    request="""SELECT metric, value, test.run_id as run, test.name as test_id
+               FROM valid
+               INNER JOIN test ON test.id=valid.test_id
+               WHERE test.name=? AND valid.metric=?"""
+    cursor.execute(request,[test_id,metric_id])
+    res=cursor.fetchall()
+    return res

@@ -5,10 +5,10 @@ from dash.dependencies import Input, Output
 
 if __name__ == '__main__':
     from app import app
-    from apps import runs, run, test
+    from apps import runs, run, test, history
 else:
     from .app import app
-    from .apps import runs, run, test
+    from .apps import runs, run, test, history
 
 url =  dcc.Location(id='url', refresh=False)
 
@@ -41,6 +41,8 @@ def display_page(pathname):
         return run.layout
     if page[1] == 'test':
         return test.layout
+    if page[1] == 'history':
+        return history.layout
     else:
         return 'Bonjour'
 
