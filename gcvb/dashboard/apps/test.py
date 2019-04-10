@@ -18,6 +18,10 @@ def data_preparation(run, test_id):
 
     data = {}
     data["Tasks"] = []
+    data["test_id"] = test_id
+    data["description"] = base["Tests"][test_id].get("description","")
+    data["status"] = "success"
+
     for task in base["Tests"][test_id]["Tasks"]:
         d = {}
         data["Tasks"].append(d)
@@ -30,7 +34,11 @@ def data_preparation(run, test_id):
             v["id"]=validation["id"]
             v["type"]=validation.get("type","file_comparison")
             v["tolerance"]=validation["tolerance"]
-            v["distance"]=run_summary["metrics"].get(v["id"],"N/A")
+            v["distance"]=run_summary["metrics"].get(v["id"],"N/A") #Todo, it's ok only for file comparison...
+            if v["distance"]=="N/A" and data["status"]!="failure":
+                data["status"]="missing_validation"
+            elif float(v["distance"])>float(v["tolerance"]):
+                data["status"]="failure"
     return data
 
 #Content
@@ -56,16 +64,6 @@ def metric_table(list_of_metrics):
 
 def summary_panel(data):
     description_block=html.Div([html.H5("Description"),html.P(data["description"])],id="description")
-
-    result_line=html.Tr([html.Th("Result"),(html.Td(data["result"]))])
-    time_line=html.Tr([html.Th("Elapsed time (s)"),(html.Td(data["time"]))])
-
-    #Table
-    table=html.Table(html.Tbody([result_line,time_line]), className="table table-sm")
-
-    #Panel
-    panel_header=html.Div(html.H3("Summary",className="panel-title"),className="panel panel-heading")
-    panel=html.Div([panel_header,table],className="panel panel-default")
     return description_block
 
 def details_panel(data):
@@ -86,11 +84,6 @@ def gen_page(run_id, test_id):
     #return dbc.Container(str((run_summary,base["Tests"][test_id])))
 
     data=data_preparation(run_id,test_id)
-    data["description"]="Fake description"
-    data["result"]="Success!"
-    data["time"]="666"
-    data["test_id"]="<placeholder_testname>"
-    data["status"]="missing_validation"
 
     #Title + Badge
     status_str=html.Span("Success",className="badge badge-success")
