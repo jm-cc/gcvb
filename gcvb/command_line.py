@@ -71,7 +71,7 @@ def main():
         a=filter_tests(args,a)
     #Commands
     if args.command=="list":
-        print(yaml.dump(a))
+        print(yaml.dump({"Packs" : a["Packs"]}))
     if args.command=="generate":
         if not(os.path.isfile(db.database)):
             db.create_db()
