@@ -34,6 +34,7 @@ def parse():
     parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
+    parser_compute.add_argument("--header", metavar="file", help="use file as header when generating job script", default=None)
 
     parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run"])
     parser_db.add_argument("run_id", type=str)
@@ -93,7 +94,7 @@ def main():
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         db.add_tests(run_id,all_tests)
         job_file=os.path.join(computation_dir,"job.sh")
-        job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file)
+        job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file, header=args.header)
         job.launch(job_file,config)
 
 

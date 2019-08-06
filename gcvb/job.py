@@ -35,9 +35,14 @@ def generate(target_dir,data_root,gcvb):
                     format_dic["@job_creation"]=template.job_creation_dict()
                     template.apply_format_to_file(src,dst,format_dic)
 
-def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"):
+def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh", header=None):
     valid=yaml_input.get_references(tests,data_root)
     with open(job_file,'w') as f:
+        if (header):
+            with open(header, 'r') as h:
+                for line in h:
+                    f.write(line)
+            f.write("\n")
         f.write("python3 -m gcvb db start_run {0} -1 -1 \n".format(run_id))
         f.write("cd results/{0}\n".format(str(base_id)))
         for test in tests:
