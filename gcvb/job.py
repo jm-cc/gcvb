@@ -65,10 +65,13 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
                 for d,v in enumerate(t.get("Validations",[])):
                     at_job_creation["va_id"]=v["id"]
                     at_job_creation["va_executable"]=v["executable"]
-                    if "-" in v["id"]:
+                    if v["type"]=="file_comparison":
                         #specific values for file comparison
-                        tmp=v["id"].split("-")
-                        v_dir,v_id=tmp[0],tmp[1]
+                        if "base" not in v:
+                            tmp=v["id"].split("-")
+                            v_dir,v_id=tmp[0],tmp[1]
+                        else:
+                            v_dir,v_id=v["base"],v["ref"]
                         at_job_creation["va_filename"]=valid[test["data"]][v_dir][v_id]["file"]
                         at_job_creation["va_refdir"]=os.path.join(data_root,test["data"],"references",v_dir)
                     if v["executable"] in config["executables"]:
