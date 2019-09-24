@@ -9,12 +9,14 @@ creation_script="""
 CREATE TABLE gcvb(id            INTEGER PRIMARY KEY,
                   command_line  TEXT,
                   yaml_file     TEXT,
+                  modifier      TEXT,
                   creation_date INTEGER);
 
 CREATE TABLE run(id         INTEGER PRIMARY KEY,
                  start_date INTEGER,
                  end_date   INTEGER,
                  gcvb_id    INTEGER,
+                 config_id  TEXT,
                  FOREIGN KEY(gcvb_id) REFERENCES gcvb(id));
 
 CREATE TABLE test(id         INTEGER PRIMARY KEY,
@@ -81,8 +83,8 @@ def get_last_gcvb(cursor):
     return cursor.fetchone()["id"]
 
 @with_connection
-def add_run(cursor, gcvb_id):
-    cursor.execute("INSERT INTO run(gcvb_id) VALUES (?)",[gcvb_id])
+def add_run(cursor, gcvb_id, config_id):
+    cursor.execute("INSERT INTO run(gcvb_id,config_id) VALUES (?,?)",[gcvb_id,config_id])
     return cursor.lastrowid
 
 @with_connection
@@ -185,3 +187,38 @@ def retrieve_file(cursor, run_id, test_name, filename):
                WHERE run_id = ? AND test.name = ? AND filename = ?"""
     cursor.execute(request, [run_id,test_name, filename])
     return gzip.decompress(cursor.fetchone()["file"])
+
+@with_connection
+def retrieve_input(cursor, run):
+    request="""SELECT yaml_file, modifier
+               FROM gcvb
+               INNER JOIN run ON gcvb.id=run.gcvb_id
+               WHERE run.id=?"""
+    cursor.execute(request, [run])
+    res=cursor.fetchone()
+    return (res["yaml_file"],res["modifier"])
+
+@with_connection
+def retrieve_test(cursor, run, test_id):
+    request="""SELECT id, start_date, end_date
+               FROM test
+               WHERE name=? AND run_id=?"""
+    cursor.execute(request,[test_id,run])
+    res=dict(cursor.fetchone())
+    request="""SELECT metric, value
+               FROM valid
+               WHERE test_id=?"""
+    cursor.execute(request,[res["id"]])
+    metrics=cursor.fetchall()
+    res["metrics"]={m["metric"]:m["value"] for m in metrics}
+    return res
+
+@with_connection
+def retrieve_history(cursor, test_id, metric_id):
+    request="""SELECT metric, value, test.run_id as run, test.name as test_id
+               FROM valid
+               INNER JOIN test ON test.id=valid.test_id
+               WHERE test.name=? AND valid.metric=?"""
+    cursor.execute(request,[test_id,metric_id])
+    res=cursor.fetchall()
+    return res

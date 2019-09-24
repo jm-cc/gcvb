@@ -10,14 +10,13 @@ from . import job
 from . import util
 from . import db
 from . import validation
-import importlib
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
 
     #filters options
     parser.add_argument('--yaml-file',metavar="filename",default="test.yaml")
-    parser.add_argument('--modifier',metavar="python_module")
+    parser.add_argument('--modifier',metavar="python_module", default=None)
     parser.add_argument('--data-root',metavar="dir",default=os.path.join(os.getcwd(),"data"))
     parser.add_argument('--filter-by-pack',metavar="regexp",help="Regexp to select packs")
     parser.add_argument('--filter-by-test-id',metavar="regexp",help="Regexp to select jobs by test-id")
@@ -32,8 +31,10 @@ def parse():
     parser_compute = subparsers.add_parser('compute', help="run tests")
     parser_db = subparsers.add_parser('db', add_help=False)
     parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
+    parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
+    parser_compute.add_argument("--header", metavar="file", help="use file as header when generating job script", default=None)
 
     parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run"])
     parser_db.add_argument("run_id", type=str)
@@ -67,14 +68,11 @@ def main():
     args=parse()
     data_root=os.path.abspath(args.data_root)
     if args.command in ["list","generate"]:
-        a=yaml_input.load_yaml(args.yaml_file)
-        if (args.modifier):
-            mod=importlib.import_module(args.modifier)
-            a=mod.modify(a)
+        a=yaml_input.load_yaml(args.yaml_file, args.modifier)
         a=filter_tests(args,a)
     #Commands
     if args.command=="list":
-        print(yaml.dump(a))
+        print(yaml.dump({"Packs" : a["Packs"]}))
     if args.command=="generate":
         if not(os.path.isfile(db.database)):
             db.create_db()
@@ -84,18 +82,19 @@ def main():
 
     if args.command=="compute":
         gcvb_id=args.gcvb_base
+        config=util.open_yaml("config.yaml")
+        config_id=config.get("machine_id")
         if not(gcvb_id):
             gcvb_id=db.get_last_gcvb()
-        run_id=db.add_run(gcvb_id)
+        run_id=db.add_run(gcvb_id,config_id)
         computation_dir="./results/{}".format(str(gcvb_id))
         a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
         a=filter_tests(args,a)
-        config=util.open_yaml("config.yaml")
 
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         db.add_tests(run_id,all_tests)
         job_file=os.path.join(computation_dir,"job.sh")
-        job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file)
+        job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file, header=args.header)
         job.launch(job_file,config)
 
 
@@ -118,7 +117,7 @@ def main():
     if args.command=="report":
         run_id,gcvb_id=db.get_last_run()
         computation_dir="./results/{}".format(str(gcvb_id))
-        a=yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
+        a=yaml_input.load_yaml_from_run(run_id)
 
         #Is the run finished ?
         tests=db.get_tests(run_id)
@@ -141,6 +140,10 @@ def main():
             print("{!s} failure(s) : {!s}".format(len(failed),list(failed)))
             print("Details of failures :")
             pprint.pprint(report.failure)
+
+    if args.command=="dashboard":
+        from . import dashboard
+        dashboard.run_server()
 
 if __name__ == '__main__':
     main()

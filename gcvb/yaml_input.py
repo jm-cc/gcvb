@@ -1,8 +1,10 @@
 import yaml
 import copy
 import os
+import importlib
 from . import template
 from . import util
+from . import db
 
 def propagate_default_value(default_dict,target_dict):
     for step in ["validation","task","test"]:
@@ -16,7 +18,7 @@ def set_default_value(default_dict,target_dict):
         if k not in target_dict:
             target_dict[k]=v
 
-def load_yaml(yaml_file):
+def load_yaml(yaml_file, modifier=None):
     """Load a yaml file and generate the corresponding gcvb dictionary
 
     Keyword arguments:
@@ -67,6 +69,9 @@ def load_yaml(yaml_file):
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
             res["Tests"][current_test["id"]]=current_test
+    if (modifier):
+        mod=importlib.import_module(modifier)
+        res=mod.modify(res)
     return res
 
 def filter_by_tag(tests,tag):
@@ -95,3 +100,7 @@ def get_references(tests_cases,data_root="./"):
             for v in tmp:
                 res[d].setdefault(current_ref,{})[v["id"]]=v
     return res
+
+def load_yaml_from_run(run_id):
+    ya,mod=db.retrieve_input(run_id)
+    return load_yaml(ya,mod)

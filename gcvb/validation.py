@@ -5,6 +5,7 @@ class Report:
     def __init__(self, validation_base, run_base, configuration=None):
         self.run_base = run_base
         self.validation_base = {}
+        self.status = {}
         for p in validation_base["Packs"]:
             for t in p["Tests"]:
                 self.validation_base[t["id"]]={}
@@ -19,11 +20,14 @@ class Report:
         self.failure={}
         self.missing_validations={}
         for test_id,test in self.run_base.items():
+            self.status[test_id]="success"
             for validation_metric,valid in self.validation_base[test_id].items():
                 if validation_metric not in test:
                     self.missing_validations.setdefault(test_id,[]).append(validation_metric)
+                    if self.status[test_id]!="failure":
+                        self.status[test_id]="missing_validation"
                     continue
-                validation_type=valid.get("type","file_comparison")
+                validation_type=valid.setdefault("type","file_comparison")
                 if validation_type=="file_comparison":
                     t=float(test[validation_metric])
                     self.__within_tolerance(t,test_id,valid)
@@ -40,11 +44,12 @@ class Report:
                     raise ValueError("Unknown validation type \"%s\". Should be in (file_comparison,configuration_independent,configuration_dependent)" % validation_type)
 
     def __within_tolerance(self,test_value,test_id,valid):
-        res={"id" : valid["id"], "tolerance" : valid["tolerance"], "distance" : test_value}
+        res={"id" : valid["id"], "tolerance" : valid["tolerance"], "distance" : test_value, "type" : valid["type"]}
         if (test_value<=float(valid["tolerance"])):
             self.success.setdefault(test_id,[]).append(res)
         else:
             self.failure.setdefault(test_id,[]).append(res)
+            self.status[test_id]="failure" # failure is definitive
 
     def is_success(self):
         return not(self.missing_validations or self.failure)
