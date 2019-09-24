@@ -54,7 +54,7 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
                 at_job_creation["executable"]=t["executable"]
                 if t["executable"] in config["executables"]:
                     at_job_creation["executable"]=config["executables"][t["executable"]]
-                at_job_creation["options"]=t["options"]
+                at_job_creation["options"]=t.get("options","")
                 f.write(t["launch_command"].format(**{"@job_creation" : at_job_creation}))
                 f.write("\n")
                 for d,v in enumerate(t.get("Validations",[])):
