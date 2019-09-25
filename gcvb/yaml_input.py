@@ -31,6 +31,8 @@ def load_yaml(yaml_file, modifier=None):
     #res["default_values"]=default_values
     res["Packs"]=[]
     res["Tests"]={}
+    if "data_root" in original:
+        res["data_root"]=original["data_root"]
 
     for pack in original["Packs"]:
         pack.setdefault("default_values",{})

@@ -4,13 +4,14 @@ from . import util
 from . import yaml_input
 from . import template
 
-def generate(target_dir,data_root,gcvb):
+def generate(target_dir,gcvb):
     """Generate computation directories
 
     Keyword arguments:
     target_dir -- targeted directory
     gcvb       -- gcvb struct
     """
+    data_root=gcvb["data_root"]
     os.makedirs(target_dir)
     test_file=os.path.join(target_dir,"tests.yaml")
     util.write_yaml(gcvb,test_file)

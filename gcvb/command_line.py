@@ -17,7 +17,6 @@ def parse():
     #filters options
     parser.add_argument('--yaml-file',metavar="filename",default="test.yaml")
     parser.add_argument('--modifier',metavar="python_module", default=None)
-    parser.add_argument('--data-root',metavar="dir",default=os.path.join(os.getcwd(),"data"))
     parser.add_argument('--filter-by-pack',metavar="regexp",help="Regexp to select packs")
     parser.add_argument('--filter-by-test-id',metavar="regexp",help="Regexp to select jobs by test-id")
     group = parser.add_mutually_exclusive_group()
@@ -32,6 +31,8 @@ def parse():
     parser_db = subparsers.add_parser('db', add_help=False)
     parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
     parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
+
+    parser_generate.add_argument('--data-root',metavar="dir",default=os.path.join(os.getcwd(),"data"))
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
     parser_compute.add_argument("--header", metavar="file", help="use file as header when generating job script", default=None)
@@ -66,7 +67,6 @@ def filter_tests(args,data):
 
 def main():
     args=parse()
-    data_root=os.path.abspath(args.data_root)
     if args.command in ["list","generate"]:
         a=yaml_input.load_yaml(args.yaml_file, args.modifier)
         a=filter_tests(args,a)
@@ -74,11 +74,13 @@ def main():
     if args.command=="list":
         print(yaml.dump({"Packs" : a["Packs"]}))
     if args.command=="generate":
+        data_root=os.path.abspath(args.data_root)
         if not(os.path.isfile(db.database)):
             db.create_db()
         gcvb_id=db.new_gcvb_instance(args.yaml_file,' '.join(sys.argv[1:]))
         target_dir="./results/{}".format(str(gcvb_id))
-        job.generate(target_dir,data_root,a)
+        a["data_root"]=data_root
+        job.generate(target_dir,a)
 
     if args.command=="compute":
         gcvb_id=args.gcvb_base
@@ -94,6 +96,7 @@ def main():
         all_tests=[t for p in a["Packs"] for t in p["Tests"]]
         db.add_tests(run_id,all_tests)
         job_file=os.path.join(computation_dir,"job.sh")
+        data_root=a["data_root"]
         job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file, header=args.header)
         job.launch(job_file,config)
 
