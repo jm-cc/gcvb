@@ -65,8 +65,20 @@ def filter_tests(args,data):
             e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))!=set())]
     return data
 
+def get_to_gcvb_root():
+    while not(os.path.isfile("config.yaml")):
+        current_path=os.getcwd()
+        os.chdir("..")
+        if (os.getcwd()==current_path):
+            print("You are not inside a gcvb instance. The config.yaml was not found in a parent directory.")
+            sys.exit()
+
 def main():
     args=parse()
+    if args.command not in ["db"]:
+        #currently db is a special command that is supposed to be invoked only internaly by gcvb.
+        get_to_gcvb_root()
+
     if args.command in ["list","generate"]:
         a=yaml_input.load_yaml(args.yaml_file, args.modifier)
         a=filter_tests(args,a)
