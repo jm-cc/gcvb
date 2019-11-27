@@ -10,6 +10,7 @@ from . import job
 from . import util
 from . import db
 from . import validation
+from . import snippet
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -31,6 +32,7 @@ def parse():
     parser_db = subparsers.add_parser('db', add_help=False)
     parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
     parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
+    parser_snippet = snippet.generate_parser(subparsers)
 
     parser_generate.add_argument('--data-root',metavar="dir",default=None)
 
@@ -75,7 +77,7 @@ def get_to_gcvb_root():
 
 def main():
     args=parse()
-    if args.command not in ["db"]:
+    if args.command not in ["db","snippet"]:
         #currently db is a special command that is supposed to be invoked only internaly by gcvb.
         get_to_gcvb_root()
 
@@ -158,6 +160,9 @@ def main():
             print("{!s} failure(s) : {!s}".format(len(failed),list(failed)))
             print("Details of failures :")
             pprint.pprint(report.failure)
+
+    if args.command == "snippet":
+        snippet.display(args)
 
     if args.command=="dashboard":
         from . import dashboard
