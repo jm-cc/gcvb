@@ -32,7 +32,7 @@ def parse():
     parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
     parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
 
-    parser_generate.add_argument('--data-root',metavar="dir",default=os.path.join(os.getcwd(),"data"))
+    parser_generate.add_argument('--data-root',metavar="dir",default=None)
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
     parser_compute.add_argument("--header", metavar="file", help="use file as header when generating job script", default=None)
@@ -86,7 +86,10 @@ def main():
     if args.command=="list":
         print(yaml.dump({"Packs" : a["Packs"]}))
     if args.command=="generate":
-        data_root=os.path.abspath(args.data_root)
+        data_root=os.path.join(os.getcwd(),"data")
+        if (args.data_root):
+            data_root=os.path.abspath(args.data_root)
+
         if not(os.path.isfile(db.database)):
             db.create_db()
         gcvb_id=db.new_gcvb_instance(args.yaml_file,' '.join(sys.argv[1:]))
