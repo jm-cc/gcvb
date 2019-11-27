@@ -4,6 +4,14 @@ from . import util
 from . import yaml_input
 from . import template
 
+def templates_to_files(test,template_path,target_dir):
+    for file in os.listdir(template_path):
+        src=os.path.join(template_path,file)
+        dst=os.path.join(target_dir,test["id"],file)
+        format_dic=test["template_instantiation"].copy()
+        format_dic["@job_creation"]=template.job_creation_dict()
+        template.apply_format_to_file(src,dst,format_dic)
+
 def generate(target_dir,gcvb):
     """Generate computation directories
 
@@ -28,13 +36,13 @@ def generate(target_dir,gcvb):
                 else:
                     os.symlink(src,dst)
             if ("template_files" in t):
-                template_path=os.path.join(data_root,t["data"],"templates",t["template_files"])
-                for file in os.listdir(template_path):
-                    src=os.path.join(template_path,file)
-                    dst=os.path.join(target_dir,t["id"],file)
-                    format_dic=t["template_instantiation"].copy()
-                    format_dic["@job_creation"]=template.job_creation_dict()
-                    template.apply_format_to_file(src,dst,format_dic)
+                if isinstance(t["template_files"], list):
+                    for template_dir in t["template_files"]:
+                        template_path=os.path.join(data_root,t["data"],"templates",template_dir)
+                        templates_to_files(t,template_path,target_dir)
+                else:
+                    template_path=os.path.join(data_root,t["data"],"templates",t["template_files"])
+                    templates_to_files(t,template_path,target_dir)
 
 def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh", header=None):
     valid=yaml_input.get_references(tests,data_root)
