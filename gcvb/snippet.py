@@ -1,4 +1,6 @@
 import argparse
+import types
+import sys
 from collections import defaultdict
 
 snippets=defaultdict(dict)
@@ -52,6 +54,14 @@ def generate_parser(parser):
                                   description=help_string)
 
     subparser.add_argument("snippet", metavar="example-file", choices=snippets.keys())
+    # Change the way error behave for snippet command - print help instead.
+    # That way 'gcvb snippet' gives help instead of complaining that an argument is missing
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
+    subparser.error=types.MethodType(error,subparser)
+
 
 def display(args):
     print(snippets[args.snippet]["file"], end='')
