@@ -24,6 +24,8 @@ def parse():
     group.add_argument('--filter-by-tag',metavar="tag",help="a tag name to filter tests")
     group.add_argument('--filter-by-tag-and',metavar="tag_list",help="comma-separated list of tags to filter tests (AND operator)")
     group.add_argument('--filter-by-tag-or',metavar="tag_list",help="comma-separated list of tags to filter tests (OR operator)")
+    #filter + exclude is possible.
+    parser.add_argument('--exclude-tag',metavar="tag_list",help="comma-separated list of tags to filter tests. Tests containing at least one of the tags will be excluded.")
     
     subparsers = parser.add_subparsers(dest="command")
     parser_generate = subparsers.add_parser('generate', help="generate a new gcvb instance")
@@ -65,6 +67,10 @@ def filter_tests(args,data):
         tags=set(args.filter_by_tag_or.split(","))
         for e in data["Packs"]:
             e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))!=set())]
+    if (args.exclude_tag):
+        tags=set(args.exclude_tag.split(","))
+        for e in data["Packs"]:
+            e["Tests"]=[t for t in e["Tests"] if (tags.intersection(set(t.get("tags",[])))==set())]
     return data
 
 def get_to_gcvb_root():
