@@ -5,6 +5,8 @@ import importlib
 from . import template
 from . import util
 from . import db
+from functools import reduce
+import operator
 
 def propagate_default_value(default_dict,target_dict):
     for step in ["validation","task","test"]:
@@ -67,6 +69,11 @@ def load_yaml(yaml_file, modifier=None):
                     del current_test["type"]
                     current_test["template_instantiation"]=t
                     current_pack["Tests"].append(current_test)
+                    #User might want to generate multiple tags through templating
+                    # ',' comma is forbidden in a tag...
+                    #... but can be use to generate multiple ones through templates
+                    if "tags" in current_test:
+                        current_test["tags"]=reduce(operator.add,[t.split(",") for t in current_test["tags"]])
             else:
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
