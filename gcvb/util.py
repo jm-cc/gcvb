@@ -13,7 +13,7 @@ def open_yaml(filename):
 
 def write_yaml(struct,filename):
     with open(filename,'w') as f:
-        f.write(yaml.dump(struct,Dumper=Dumper))
+        f.write(yaml.dump(struct,Dumper=Dumper,sort_keys=False))
 
 def uncompress(file_in,file_out):
     with gzip.open(file_in, 'rb') as f_in:
