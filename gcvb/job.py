@@ -78,6 +78,8 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
                         #specific values for file comparison
                         if "base" not in v:
                             tmp=v["id"].split("-")
+                            if len(tmp)!=2:
+                                raise ValueError(f"No base specified, and there is no or more than one '-' in id. Validation id : '{v['id']}'' for test '{test['id']}'.")
                             v_dir,v_id=tmp[0],tmp[1]
                         else:
                             v_dir,v_id=v["base"],v["ref"]
