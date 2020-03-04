@@ -1,8 +1,11 @@
 import os
 import subprocess
+import re
+from copy import copy
 from . import util
 from . import yaml_input
 from . import template
+
 
 def templates_to_files(test,template_path,target_dir):
     for file in os.listdir(template_path):
@@ -44,6 +47,16 @@ def generate(target_dir,gcvb):
                     template_path=os.path.join(data_root,t["data"],"templates",t["template_files"])
                     templates_to_files(t,template_path,target_dir)
 
+def format_launch_command(format_string, config, at_job_creation):
+    regexp="{@executable\[(?P<identifier>[^\]]*)\]}"
+    l=re.findall(regexp,format_string)
+    executable=copy(config["executables"])
+    for e in l:
+        if e not in executable:
+            executable[e]=e
+    d={"@job_creation" : at_job_creation, "@executable" : executable}
+    return format_string.format(**d)
+
 def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh", header=None):
     valid=yaml_input.get_references(tests,data_root)
     with open(job_file,'w') as f:
@@ -69,7 +82,7 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
                 if t["executable"] in config["executables"]:
                     at_job_creation["executable"]=config["executables"][t["executable"]]
                 at_job_creation["options"]=t.get("options","")
-                f.write(t["launch_command"].format(**{"@job_creation" : at_job_creation}))
+                f.write(format_launch_command(t["launch_command"],config,at_job_creation))
                 f.write("\n")
                 for d,v in enumerate(t.get("Validations",[])):
                     at_job_creation["va_id"]=v["id"]
@@ -87,7 +100,7 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
                         at_job_creation["va_refdir"]=os.path.join(data_root,test["data"],"references",v_dir)
                     if v["executable"] in config["executables"]:
                         at_job_creation["va_executable"]=config["executables"][v["executable"]]
-                    f.write(v["launch_command"].format(**{"@job_creation" : at_job_creation}))
+                    f.write(format_launch_command(v["launch_command"],config,at_job_creation))
                     f.write("\n")
             f.write("python3 -m gcvb db end_test {0} {1} {2}\n".format(run_id,test["id_db"],test["id"]))
             f.write("cd ..\n")
