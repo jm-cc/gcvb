@@ -40,6 +40,8 @@ def parse():
 
     parser_generate.add_argument('--data-root',metavar="dir",default=None)
 
+    parser_list.add_argument("--count", action="store_true", help="get number of tests (after template expansion and filtering).")
+
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
     parser_compute.add_argument("--header", metavar="file", help="use file as header when generating job script", default=None)
 
@@ -100,7 +102,10 @@ def main():
         a=filter_tests(args,a)
     #Commands
     if args.command=="list":
-        print(yaml.dump({"Packs" : a["Packs"]}))
+        if not(args.count):
+            print(yaml.dump({"Packs" : a["Packs"]}))
+        else:
+            print(len(a["Tests"].keys()))
     if args.command=="generate":
         data_root=os.path.join(os.getcwd(),"data")
         if (args.data_root):
