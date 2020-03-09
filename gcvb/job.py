@@ -57,6 +57,33 @@ def format_launch_command(format_string, config, at_job_creation):
     d={"@job_creation" : at_job_creation, "@executable" : executable}
     return format_string.format(**d)
 
+def fill_at_job_creation_task(at_job_creation, task, full_id, config):
+    at_job_creation["nthreads"]=task["nthreads"]
+    at_job_creation["nprocs"]=task["nprocs"]
+    at_job_creation["full_id"]=full_id #test["id"]+"_"+str(c)
+    at_job_creation["executable"]=task["executable"]
+    if task["executable"] in config["executables"]:
+        at_job_creation["executable"]=config["executables"][task["executable"]]
+    at_job_creation["options"]=task.get("options","")
+    return None
+
+def fill_at_job_creation_validation(at_job_creation, validation, data_root, ref_data, config, valid):
+    at_job_creation["va_id"]=validation["id"]
+    at_job_creation["va_executable"]=validation["executable"]
+    if validation["type"]=="file_comparison":
+        #specific values for file comparison
+        if "base" not in validation:
+            tmp=validation["id"].split("-")
+            if len(tmp)!=2:
+                raise ValueError(f"No base specified, and there is no or more than one '-' in id. Validation id : '{validation['id']}'' for test '{test['id']}'.")
+            v_dir,v_id=tmp[0],tmp[1]
+        else:
+            v_dir,v_id=validation["base"],validation["ref"]
+        at_job_creation["va_filename"]=valid[ref_data][v_dir][v_id]["file"]
+        at_job_creation["va_refdir"]=os.path.join(data_root,ref_data,"references",v_dir)
+    if validation["executable"] in config["executables"]:
+        at_job_creation["va_executable"]=config["executables"][validation["executable"]]
+
 def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh", header=None):
     valid=yaml_input.get_references(tests,data_root)
     with open(job_file,'w') as f:
@@ -75,31 +102,11 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
             f.write("python3 -m gcvb db start_test {0} {1} {2}\n".format(run_id,test["id_db"],test["id"]))
             for c,t in enumerate(test["Tasks"]):
                 at_job_creation={}
-                at_job_creation["nthreads"]=t["nthreads"]
-                at_job_creation["nprocs"]=t["nprocs"]
-                at_job_creation["full_id"]=test["id"]+"_"+str(c)
-                at_job_creation["executable"]=t["executable"]
-                if t["executable"] in config["executables"]:
-                    at_job_creation["executable"]=config["executables"][t["executable"]]
-                at_job_creation["options"]=t.get("options","")
+                fill_at_job_creation_task(at_job_creation, t, test["id"]+"_"+str(c), config)
                 f.write(format_launch_command(t["launch_command"],config,at_job_creation))
                 f.write("\n")
                 for d,v in enumerate(t.get("Validations",[])):
-                    at_job_creation["va_id"]=v["id"]
-                    at_job_creation["va_executable"]=v["executable"]
-                    if v["type"]=="file_comparison":
-                        #specific values for file comparison
-                        if "base" not in v:
-                            tmp=v["id"].split("-")
-                            if len(tmp)!=2:
-                                raise ValueError(f"No base specified, and there is no or more than one '-' in id. Validation id : '{v['id']}'' for test '{test['id']}'.")
-                            v_dir,v_id=tmp[0],tmp[1]
-                        else:
-                            v_dir,v_id=v["base"],v["ref"]
-                        at_job_creation["va_filename"]=valid[test["data"]][v_dir][v_id]["file"]
-                        at_job_creation["va_refdir"]=os.path.join(data_root,test["data"],"references",v_dir)
-                    if v["executable"] in config["executables"]:
-                        at_job_creation["va_executable"]=config["executables"][v["executable"]]
+                    fill_at_job_creation_validation(at_job_creation, v, data_root, test["data"], config, valid)
                     f.write(format_launch_command(v["launch_command"],config,at_job_creation))
                     f.write("\n")
             f.write("python3 -m gcvb db end_test {0} {1} {2}\n".format(run_id,test["id_db"],test["id"]))
