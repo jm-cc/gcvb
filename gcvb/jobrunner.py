@@ -142,9 +142,9 @@ class JobRunner(object):
                 cursor = conn.cursor()
                 req = """SELECT * FROM test
                          WHERE run_id = ?
-                           AND start_date = NULL"""
+                           AND start_date IS NULL"""
                 cursor.execute(req,[self.run_id])
-                available_from_db = [test["name"] for test in cursor.fetchall()]
+                available_from_db = [self.tests[test["name"]][0] for test in cursor.fetchall() if self.tests[test["name"]]]
                 available_jobs = local_and_ready+available_from_db
                 to_be_run = self.elect_job(available_jobs)
                 if to_be_run and to_be_run.is_first: #was elected from database
