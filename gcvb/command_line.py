@@ -12,6 +12,7 @@ from . import db
 from . import validation
 from . import snippet
 from . import generate_refs
+from . import jobrunner
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -37,6 +38,7 @@ def parse():
     parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
     parser_snippet = snippet.generate_parser(subparsers)
     parser_generate_refs = subparsers.add_parser('generate_refs', help="generate references from a base where a computation as already been executed.")
+    parser_jobrunner = subparsers.add_parser("jobrunner", help="jobrunner to launch tests in parallel")
 
     parser_generate.add_argument('--data-root',metavar="dir",default=None)
 
@@ -137,6 +139,13 @@ def main():
         job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file, header=args.header)
         if not(args.dry_run):
             job.launch(job_file,config)
+
+    if args.command=="jobrunner":
+        run_id,gcvb_id=db.get_last_run() #run chosen should be modifiable
+        config=util.open_yaml("config.yaml")
+        num_cores=16 #will be a parameter
+        j=jobrunner.JobRunner(num_cores, run_id, config)
+        j.run()
 
 
 
