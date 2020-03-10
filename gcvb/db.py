@@ -61,6 +61,13 @@ def connect(file,f, *args, **kwargs):
         conn.close()
     return res
 
+def get_exclusive_access():
+    """Returns a sqlite3.Connection with exclusive access to the db.
+       Must be closed afterwards"""
+    conn=sqlite3.connect(database, timeout=20)
+    conn.isolation_level = 'EXCLUSIVE'
+    conn.execute('BEGIN EXCLUSIVE')
+    return conn
 
 def with_connection(f):
     """decorator for function needing to connect to the database"""
