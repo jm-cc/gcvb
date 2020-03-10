@@ -24,6 +24,9 @@ It is also possible to launch a jobrunner that computes job in parallel. (*gcvb 
 
 Multiple jobrunner can be launched through *gcvb jobrunner <num_cores>*.
 
+Note that there is no difference between a jobrunner launched through the *compute* options and by the *jobrunner* command.
+It is possible to create the right entries in the database without launching a jobrunner or submit the default launch script with the option *--dry-run*
+
 ## Copyright and license
 
 Copyright 2019 Airbus S.A.S
