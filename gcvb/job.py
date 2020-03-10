@@ -83,6 +83,8 @@ def fill_at_job_creation_validation(at_job_creation, validation, data_root, ref_
         at_job_creation["va_refdir"]=os.path.join(data_root,ref_data,"references",v_dir)
     if validation["executable"] in config["executables"]:
         at_job_creation["va_executable"]=config["executables"][validation["executable"]]
+    at_job_creation["nprocs"]=validation.get("nprocs","1") # should we default to one or impose definition ?
+    at_job_creation["nthreads"]=validation.get("nthreads","1")
 
 def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh", header=None):
     valid=yaml_input.get_references(tests,data_root)
