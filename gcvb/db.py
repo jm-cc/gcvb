@@ -175,7 +175,7 @@ def save_files(cursor, run_id, test_id, file_list):
 
 @with_connection
 def get_tests(cursor, run_id):
-    request="""SELECT name, start_date, end_date
+    request="""SELECT id, name, start_date, end_date
                FROM test
                WHERE run_id = ?"""
     cursor.execute(request, [run_id])
