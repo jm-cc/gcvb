@@ -204,6 +204,11 @@ def main():
                 previous_completed_tests = len(completed_tests)
 
 
+        started_but_not_finished=list(filter(lambda x: not x["end_date"] and x["start_date"], tests))
+        started_but_not_finished=[t["name"] for t in started_but_not_finished]
+        if (started_but_not_finished):
+            print(f"{len(started_but_not_finished)} tests did start but did not finish : ")
+            print(started_but_not_finished)
         print("Tests completed : {!s}/{!s}".format(len(completed_tests),len(tests)))
 
         tmp=db.load_report(run_id)
@@ -215,6 +220,7 @@ def main():
                 print("No failure yet, computation in progress...")
         else:
             if report.missing_validations:
+                #should we show only missing_validations for completed tests ?
                 print("Some validation metrics are missing :")
                 pprint.pprint(report.missing_validations)
             failed=report.get_failed_tests()
