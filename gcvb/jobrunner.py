@@ -15,8 +15,8 @@ class Job(object):
         self.test_id = test_id
         self.test_id_db = test_id_db
         self.launch_command = launch_command
-        self.num_process = num_process
-        self.num_threads = num_threads
+        self.num_process = int(num_process)
+        self.num_threads = int(num_threads)
         self.type = job_type
         self.is_first = False
         self.is_last = False
