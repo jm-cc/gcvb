@@ -104,6 +104,7 @@ class JobRunner(object):
                     self.condition.wait()
             else:
                 with self.lock:
+                    self.tests[job.test_id].pop(0)
                     self.available_cores -= job.num_cores()
                     t = threading.Thread(name = job.name(), target = lambda: self._run_job(job))
                     self.running_tests[job.test_id] = t
