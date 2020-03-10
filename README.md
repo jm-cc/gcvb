@@ -17,6 +17,13 @@ pip3 install .
 
 As of today, the documentation is mainly available under the form of examples in the [gcvb-example repository](https://github.com/jm-cc/gcvb-examples).
 
+## Jobrunner
+
+When launching computation with *compute*, by default a script is submitted.
+It is also possible to launch a jobrunner that computes job in parallel. (*gcvb compute --with-jobrunner <num_cores>*)
+
+Multiple jobrunner can be launched through *gcvb jobrunner <num_cores>*.
+
 ## Copyright and license
 
 Copyright 2019 Airbus S.A.S
