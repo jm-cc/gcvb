@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import pprint
+import time
 from . import yaml_input
 from . import template
 from . import job
@@ -62,6 +63,9 @@ def parse():
 
     parser_jobrunner.add_argument("num_cores", metavar="num_cores", type=int, help="number of cores to be used")
 
+    parser_report.add_argument("--polling", action="store_true", help="poll report until finished or timeout expiration")
+    parser_report.add_argument("-f","--frequency", help="time between each check", type=float, default=10)
+    parser_report.add_argument("--timeout", help="time between each", type=float, default=300)
 
 
     args=parser.parse_args()
@@ -97,6 +101,14 @@ def get_to_gcvb_root():
         if (os.getcwd()==current_path):
             print("You are not inside a gcvb instance. The config.yaml was not found in a parent directory.")
             sys.exit()
+
+def report_check_terminaison(run_id):
+    tests=db.get_tests(run_id)
+    completed_tests=list(filter(lambda x: x["end_date"], tests))
+    finished=(len(completed_tests)==len(tests))
+    return completed_tests,tests,finished
+
+
 
 def main():
     args=parse()
@@ -178,10 +190,21 @@ def main():
         a=yaml_input.load_yaml_from_run(run_id)
 
         #Is the run finished ?
-        tests=db.get_tests(run_id)
-        completed_tests=list(filter(lambda x: x["end_date"], tests))
+        started_at=time.time()
+        previous_completed_tests = -1
+        completed_tests, tests, finished = report_check_terminaison(run_id)
+
+        if args.polling:
+            while not finished and time.time()-started_at<args.timeout :
+                completed_tests, tests, finished = report_check_terminaison(run_id)
+                if (previous_completed_tests != len(completed_tests)):
+                    now = time.strftime("%H:%M:%S %d/%m/%y")
+                    print("Tests completed : {!s}/{!s} ({!s})".format(len(completed_tests),len(tests),now))
+                time.sleep(args.frequency)
+                previous_completed_tests = len(completed_tests)
+
+
         print("Tests completed : {!s}/{!s}".format(len(completed_tests),len(tests)))
-        finished=(len(completed_tests)==len(tests))
 
         tmp=db.load_report(run_id)
         report=validation.Report(a,tmp)
