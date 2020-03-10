@@ -44,6 +44,7 @@ def parse():
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
     parser_compute.add_argument("--header", metavar="file", help="use file as header when generating job script", default=None)
+    parser_compute.add_argument("--dry-run", action="store_true", help="do not launch the job.")
 
     parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run"])
     parser_db.add_argument("run_id", type=str)
@@ -134,7 +135,9 @@ def main():
         job_file=os.path.join(computation_dir,"job.sh")
         data_root=a["data_root"]
         job.write_script(all_tests, config, data_root, gcvb_id, run_id, job_file=job_file, header=args.header)
-        job.launch(job_file,config)
+        if not(args.dry_run):
+            job.launch(job_file,config)
+
 
 
     if args.command=="db":
