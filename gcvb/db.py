@@ -90,6 +90,11 @@ def get_last_gcvb(cursor):
     return cursor.fetchone()["id"]
 
 @with_connection
+def get_base_from_run(cursor, run_id):
+    cursor.execute("SELECT gcvb_id FROM run WHERE id=?",[run_id])
+    return cursor.fetchone()["gcvb_id"]
+
+@with_connection
 def add_run(cursor, gcvb_id, config_id):
     cursor.execute("INSERT INTO run(gcvb_id,config_id) VALUES (?,?)",[gcvb_id,config_id])
     return cursor.lastrowid
