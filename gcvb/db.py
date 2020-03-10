@@ -134,7 +134,7 @@ def add_metric(cursor, run_id, test_id, name, value):
 
 @with_connection
 def get_last_run(cursor):
-    cursor.execute("SELECT * from run ORDER BY start_date DESC LIMIT 1")
+    cursor.execute("SELECT * from run ORDER BY id DESC LIMIT 1")
     res=cursor.fetchone()
     return (res["id"],res["gcvb_id"])
 
