@@ -81,7 +81,7 @@ class JobRunner(object):
         # Go to the right directory
         os.chdir(computation_dir)
         # Then choose the right location for the db
-        db.set_db("../../gcvb.db")
+        db.set_db(os.path.abspath("../../gcvb.db"))
 
     def _run_job(self, job):
         job.run()
@@ -89,7 +89,13 @@ class JobRunner(object):
             self.available_cores += job.num_cores()
             del self.running_tests[job.test_id]
             if job.is_last:
-                db.end_test(job.test_id_db,job.run_id)
+                conn = db.get_exclusive_access()
+                with conn:
+                    cursor = conn.cursor()
+                    req = """UPDATE test SET end_date = CURRENT_TIMESTAMP
+                             WHERE id = ? and run_id = ?"""
+                    cursor.execute(req,[job.test_id_db,job.run_id])
+                conn.close()
         with self.condition:
             self.condition.notify()
 
