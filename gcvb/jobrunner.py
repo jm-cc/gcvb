@@ -26,7 +26,7 @@ class Job(object):
         env = dict(os.environ)
         env["GCVB_RUN_ID"] = f"{self.run_id}"
         env["GCVB_TEST_ID"] = f"{self.test_id_db}"
-        subprocess.call(self.launch_command, shell=True, cwd=self.test_id, env=env)
+        return subprocess.call(self.launch_command, shell=True, cwd=self.test_id, env=env)
     def name(self):
         return f"{self.test_id}_{self.num_process}x{self.num_threads}_{self.type}"
     def __repr__(self):
@@ -77,6 +77,7 @@ class JobRunner(object):
             l[-1].is_last = True
 
         self.started_locally = set()
+        self.failed_tests = set() # set of tests for which at least one task returned something else than sys.EX_OK
 
         # Go to the right directory
         os.chdir(computation_dir)
@@ -84,11 +85,11 @@ class JobRunner(object):
         db.set_db(os.path.abspath("../../gcvb.db"))
 
     def _run_job(self, job):
-        job.run()
+        return_code = job.run()
         with self.lock:
             self.available_cores += job.num_cores()
             del self.running_tests[job.test_id]
-            if job.is_last:
+            if job.is_last or return_code!=os.EX_OK:
                 conn = db.get_exclusive_access()
                 with conn:
                     cursor = conn.cursor()
@@ -96,6 +97,8 @@ class JobRunner(object):
                              WHERE id = ? and run_id = ?"""
                     cursor.execute(req,[job.test_id_db,job.run_id])
                 conn.close()
+            if return_code!=os.EX_OK:
+                self.failed_tests.add(job.test_id)
         with self.condition:
             self.condition.notify()
 
@@ -140,7 +143,9 @@ class JobRunner(object):
         with self.lock:
             # Queue of ready jobs
             local_and_ready = [self.tests[test][0] for test in self.started_locally
-                                                   if self.tests[test] and test not in self.running_tests]
+                                                   if self.tests[test] and
+                                                   test not in self.running_tests and
+                                                   test not in self.failed_tests]
 
             # if we take elect an unstarted job, we must mark it as started while the database is locked for us.
             # the elect process must be done with the lock on the database.
