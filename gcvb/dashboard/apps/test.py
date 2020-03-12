@@ -10,11 +10,12 @@ if __name__ == '__main__':
 else:
     from ..app import app
 from dash.dependencies import Input, Output
+from .loader import loader
 
 #Data
 def data_preparation(run, test_id):
     run_summary=db.retrieve_test(run,test_id)
-    base=yaml_input.load_yaml_from_run(run)
+    base = loader.load_base(run)
 
     data = {}
     data["Tasks"] = []
@@ -81,7 +82,7 @@ def details_panel(data):
 #Page Generator
 def gen_page(run_id, test_id):
     run_summary=db.retrieve_test(run_id,test_id)
-    base=yaml_input.load_yaml_from_run(run_id)
+    base = loader.load_base(run_id)
     r=db.load_report(run_id)
     report=val.Report(base,r)
     #return dbc.Container(metric_table(report.success[test_id]))
