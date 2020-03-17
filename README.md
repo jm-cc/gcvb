@@ -17,6 +17,24 @@ pip3 install .
 
 As of today, the documentation is mainly available under the form of examples in the [gcvb-example repository](https://github.com/jm-cc/gcvb-examples).
 
+## General philosophy
+
+Input : 
+- The "data" folder contains the input files and references.
+- A config.yaml file contains relevant information for the current computing environment used.
+- Multiple yaml files can then be use to indicate which tests to launch, store the references to detect a regression.
+
+Output :
+- a gcvb.db sqlite3 database that contains the metrics stored during runs, but also files you want to keep for each run.
+- a "results" folder where the computation are actually computed.
+
+Process :
+- Given the input, the user can generate a *base*, that base can then be used for multiple *runs*. Each run compares with the reference and allows to check that everything is in order (or not). A run can launch a subset of the test of a base through filter options.
+
+`gcvb` is mainly used with subcommands. It must be launch in the folder containing the input.
+
+To access the help, just use `gcvb -h`. Help is also available for each subcommands (e.g. `gcvb generate -h`).
+
 ## Jobrunner
 
 When launching computation with *compute*, by default a script is submitted.
