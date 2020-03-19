@@ -43,7 +43,9 @@ def parse():
 
     parser_generate.add_argument('--data-root',metavar="dir",default=None)
 
-    parser_list.add_argument("--count", action="store_true", help="get number of tests (after template expansion and filtering).")
+    group = parser_list.add_mutually_exclusive_group()
+    group.add_argument("--count", action="store_true", help="get number of tests (after template expansion and filtering).")
+    group.add_argument("-H","--human-readable", action="store_true", help="get test list in a concise way.")
 
     parser_compute.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
     parser_compute.add_argument("--header", metavar="file", help="use file as header when generating job script", default=None)
@@ -108,7 +110,13 @@ def report_check_terminaison(run_id):
     finished=(len(completed_tests)==len(tests))
     return completed_tests,tests,finished
 
-
+def list_human_readable(packs):
+  r = {"Packs" : []}
+  for p in packs:
+    r_tests = [{"id" : t["id"], "description" : t["description"]} for t in p["Tests"]]
+    if r_tests:
+      r["Packs"].append({"pack_id" : p["pack_id"], "description" : p["description"], "Tests" : r_tests})
+  return r
 
 def main():
     args=parse()
@@ -122,7 +130,11 @@ def main():
     #Commands
     if args.command=="list":
         if not(args.count):
-            print(yaml.dump({"Packs" : a["Packs"]}))
+            if (args.human_readable):
+              r = list_human_readable(a["Packs"])
+              print(yaml.dump(r,sort_keys=False))
+            else:
+              print(yaml.dump({"Packs" : a["Packs"]}))
         else:
             print(len(a["Tests"].keys()))
     if args.command=="generate":
