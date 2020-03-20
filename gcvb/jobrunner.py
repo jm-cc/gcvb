@@ -9,6 +9,8 @@ from . import db
 from . import job as gcvb_job
 from . import yaml_input
 
+exit_success = 0
+
 class Job(object):
     def __init__(self, run_id, test_id, test_id_db, launch_command, num_process, num_threads, job_type):
         self.run_id = run_id
@@ -89,7 +91,7 @@ class JobRunner(object):
         with self.lock:
             self.available_cores += job.num_cores()
             del self.running_tests[job.test_id]
-            if job.is_last or return_code!=os.EX_OK:
+            if job.is_last or return_code!=exit_success:
                 conn = db.get_exclusive_access()
                 with conn:
                     cursor = conn.cursor()
@@ -97,7 +99,7 @@ class JobRunner(object):
                              WHERE id = ? and run_id = ?"""
                     cursor.execute(req,[job.test_id_db,job.run_id])
                 conn.close()
-            if return_code!=os.EX_OK:
+            if return_code!=exit_success:
                 self.failed_tests.add(job.test_id)
         with self.condition:
             self.condition.notify()
