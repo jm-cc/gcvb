@@ -32,7 +32,6 @@ def load_yaml(yaml_file, modifier=None):
     default_values=original.get("default_values",{})
     #res["default_values"]=default_values
     res["Packs"]=[]
-    res["Tests"]={}
     if "data_root" in original:
         res["data_root"]=original["data_root"]
 
@@ -77,10 +76,16 @@ def load_yaml(yaml_file, modifier=None):
             else:
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
-            res["Tests"][current_test["id"]]=current_test
+
     if (modifier):
         mod=importlib.import_module(modifier)
         res=mod.modify(res)
+
+    res["Tests"]={}
+    for p in res["Packs"]:
+      for current_test in p["Tests"]:
+        res["Tests"][current_test["id"]]=current_test
+
     return res
 
 def filter_by_tag(tests,tag):
