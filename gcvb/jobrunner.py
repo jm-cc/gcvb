@@ -35,12 +35,13 @@ class Job(object):
         return self.name()
 
 class JobRunner(object):
-    def __init__(self, num_cores, run_id, config):
+    def __init__(self, num_cores, run_id, config, local_first=False):
         self.num_cores = num_cores
         self.running_tests = {}
         self.condition = threading.Condition()
         self.available_cores = num_cores
         self.lock = threading.Lock()
+        self.local_first = local_first
 
         self.run_id = run_id
         self.base_id = db.get_base_from_run(run_id)
@@ -126,7 +127,7 @@ class JobRunner(object):
 
     def elect_job(self, queue):
         """
-        Choose a job to run. Hack this funciton to change the strategy.
+        Choose a job to run. Hack this function to change the strategy.
 
         queue -- iterable of available jobs
         """
@@ -148,6 +149,8 @@ class JobRunner(object):
                                                    if self.tests[test] and
                                                    test not in self.running_tests and
                                                    test not in self.failed_tests]
+            if local_and_ready and self.local_first:
+                return self.elect_job(local_and_ready)
 
             # if we take elect an unstarted job, we must mark it as started while the database is locked for us.
             # the elect process must be done with the lock on the database.
