@@ -146,7 +146,7 @@ def main():
 
         if not(os.path.isfile(db.database)):
             db.create_db()
-        gcvb_id=db.new_gcvb_instance(args.yaml_file,' '.join(sys.argv[1:]))
+        gcvb_id=db.new_gcvb_instance(' '.join(sys.argv[1:]),args.yaml_file,args.modifier)
         target_dir="./results/{}".format(str(gcvb_id))
         a["data_root"]=data_root
         job.generate(target_dir,a)

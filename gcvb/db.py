@@ -81,8 +81,8 @@ def create_db(cursor):
     cursor.executescript(creation_script)
 
 @with_connection
-def new_gcvb_instance(cursor, command_line, yaml_file):
-    cursor.execute("INSERT INTO gcvb(command_line,yaml_file,creation_date) VALUES (?,?,CURRENT_TIMESTAMP)",[yaml_file,command_line])
+def new_gcvb_instance(cursor, command_line, yaml_file, modifier):
+    cursor.execute("INSERT INTO gcvb(command_line,yaml_file,modifier,creation_date) VALUES (?,?,?,CURRENT_TIMESTAMP)",[command_line,yaml_file,modifier])
     return cursor.lastrowid
 
 @with_connection
