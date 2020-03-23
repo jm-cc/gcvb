@@ -54,10 +54,10 @@ def parse():
     group.add_argument("--with-jobrunner", metavar="num_cores", type=int, help="use a jobrunner instead of one submitted job with <num_cores>", default=None)
     parser_compute.add_argument("--local-first", action="store_true", help="already started tests are launched with a higher priority (--with-jobrunner required)")
 
-    parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run"])
-    parser_db.add_argument("run_id", type=str)
-    parser_db.add_argument("test_db_id", type=str)
-    parser_db.add_argument("test_id", type=str)
+    parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run","start_task","end_task"])
+    parser_db.add_argument("first", type=str)
+    parser_db.add_argument("second", type=str)
+    parser_db.add_argument("third", type=str)
 
     parser_generate_refs.add_argument("--gcvb-base",metavar="base_id",help="choose a specific base (default: last one created)", default=None)
     parser_generate_refs.add_argument("reference_id",help="arbitrary string to identify how the references were generated")
@@ -184,25 +184,25 @@ def main():
 
     if args.command=="db":
         if args.db_command=="start_run":
-            db.start_run(args.run_id)
+            db.start_run(args.first)
         if args.db_command=="end_run":
-            db.end_run(args.run_id)
+            db.end_run(args.first)
         if args.db_command=="start_test":
             db.set_db("../../../gcvb.db")
-            db.start_test(args.run_id,args.test_db_id)
+            db.start_test(args.first,args.second)
         if args.db_command=="end_test":
             db.set_db("../../../gcvb.db")
-            db.end_test(args.run_id,args.test_db_id)
+            db.end_test(args.first,args.second)
             a=yaml_input.load_yaml("../tests.yaml")
-            t=a["Tests"][args.test_id]
+            t=a["Tests"][args.third]
             if "keep" in t:
-                db.save_files(args.run_id,args.test_db_id,t["keep"])
+                db.save_files(args.first,args.second,t["keep"])
         if args.db_command=="start_task":
             db.set_db("../../../gcvb.db")
-            db.start_task(args.run_id, args.test_db_id)
+            db.start_task(args.first, args.second)
         if args.db_command=="end_task":
             db.set_db("../../../gcvb.db")
-            db.end_task(args.run_id, args.test_db_id)
+            db.end_task(args.first, args.second, args.third)
 
     if args.command=="report":
         run_id,gcvb_id=db.get_last_run()
