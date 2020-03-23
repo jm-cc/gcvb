@@ -197,6 +197,12 @@ def main():
             t=a["Tests"][args.test_id]
             if "keep" in t:
                 db.save_files(args.run_id,args.test_db_id,t["keep"])
+        if args.db_command=="start_task":
+            db.set_db("../../../gcvb.db")
+            db.start_task(args.run_id, args.test_db_id)
+        if args.db_command=="end_task":
+            db.set_db("../../../gcvb.db")
+            db.end_task(args.run_id, args.test_db_id)
 
     if args.command=="report":
         run_id,gcvb_id=db.get_last_run()

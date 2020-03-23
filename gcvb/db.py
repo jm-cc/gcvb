@@ -141,6 +141,18 @@ def end_test(cursor, run, test_id):
                       WHERE id = ? AND run_id = ?""",[test_id,run])
 
 @with_connection
+def start_task(cursor, test_id, step):
+    cursor.execute("""UPDATE task
+                      SET start_date = CURRENT_TIMESTAMP, status = -1
+                      WHERE step = ? AND test_id = ?""", [step, test_id])
+
+@with_connection
+def end_task(cursor, test_id, step, exit_status):
+    cursor.execute("""UPDATE task
+                      SET end_date = CURRENT_TIMESTAMP, status = ?
+                      WHERE step = ? AND test_id = ?""", [exit_status, step, test_id])
+
+@with_connection
 def start_run(cursor,run):
     #update only if there is no start date already.
     #Multiple launch scripts can be started, and we might not be the first.
