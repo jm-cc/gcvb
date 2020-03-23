@@ -117,6 +117,16 @@ def add_tests(cursor, run, test_list):
     for t in test_list:
         cursor.execute("INSERT INTO test(name,run_id) VALUES(?,?)",[t["id"],run])
         t["id_db"]=cursor.lastrowid
+        step=0
+        for task in t["Tasks"]:
+          step += 1
+          cursor.execute("INSERT INTO task(step,test_id) VALUES(?,?)",
+                         [step,t["id_db"]])
+          for valid in task.get("Validations",[]):
+            step += 1
+            cursor.execute("INSERT INTO task(step,test_id) VALUES (?,?)",
+                           [step,t["id_db"]])
+
 
 @with_connection
 def start_test(cursor,run,test_id):
