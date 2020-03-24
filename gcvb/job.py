@@ -31,13 +31,9 @@ def generate(target_dir,gcvb):
             os.makedirs(os.path.join(target_dir,t["id"]))
             data_path=os.path.join(data_root,t["data"],"input")
             for file in os.listdir(data_path):
-                extension = os.path.splitext(file)[1]
                 src=os.path.join(data_path,file)
                 dst=os.path.join(target_dir,t["id"],file)
-                if (extension==".gz"):
-                    util.uncompress(src,dst[:-3])
-                else:
-                    os.symlink(src,dst)
+                os.symlink(src,dst)
             if ("template_files" in t):
                 if isinstance(t["template_files"], list):
                     for template_dir in t["template_files"]:
