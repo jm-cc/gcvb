@@ -163,7 +163,7 @@ class JobRunner(object):
     def _nextjob(self):
         with self.lock:
             # We don't take a job if we reached the max_concurrent limit
-            if self.max_concurrent and self.max_concurrent < len(self.running_tests):
+            if self.max_concurrent and self.max_concurrent <= len(self.running_tests):
                 return None
 
             # if we take elect an unstarted job, we must mark it as started while the database is locked for us.
