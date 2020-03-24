@@ -37,13 +37,13 @@ class Job(object):
         return self.name()
 
 class JobRunner(object):
-    def __init__(self, num_cores, run_id, config, local_first=False):
+    def __init__(self, num_cores, run_id, config, started_first):
         self.num_cores = num_cores
         self.running_tests = {}
         self.condition = threading.Condition()
         self.available_cores = num_cores
         self.lock = threading.Lock()
-        self.local_first = local_first
+        self.started_first = started_first
 
         self.run_id = run_id
         self.base_id = db.get_base_from_run(run_id)
@@ -169,7 +169,7 @@ class JobRunner(object):
                          HAVING test.status = 0 AND run.id = ?"""
                 cursor.execute(req,[self.run_id])
                 available_jobs = [self.tests[test["name"]][test["step"]] for test in cursor.fetchall()]
-                if (self.local_first):
+                if (self.started_first):
                   available_started_jobs = [j for j in available_jobs if j.step!=1]
                   available_jobs = available_started_jobs if available_started_jobs else available_jobs
                 to_be_run = self.elect_job(available_jobs)
