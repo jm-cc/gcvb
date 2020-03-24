@@ -107,6 +107,7 @@ def get_to_gcvb_root():
         if (os.getcwd()==current_path):
             print("You are not inside a gcvb instance. The config.yaml was not found in a parent directory.")
             sys.exit()
+    sys.path.append(os.getcwd())
 
 def report_check_terminaison(run_id):
     tests=db.get_tests(run_id)
