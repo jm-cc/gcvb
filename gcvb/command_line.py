@@ -19,8 +19,6 @@ def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
 
     #filters options
-    parser.add_argument('--yaml-file',metavar="filename",default="test.yaml")
-    parser.add_argument('--modifier',metavar="python_module", default=None)
     parser.add_argument('--filter-by-pack',metavar="regexp",help="Regexp to select packs")
     parser.add_argument('--filter-by-test-id',metavar="regexp",help="Regexp to select jobs by test-id")
     group = parser.add_mutually_exclusive_group()
@@ -42,7 +40,11 @@ def parse():
     parser_jobrunner = subparsers.add_parser("jobrunner", help="jobrunner to launch tests in parallel")
 
     parser_generate.add_argument('--data-root',metavar="dir",default=None)
+    parser_generate.add_argument('--yaml-file', '-f', metavar="filename", default="test.yaml")
+    parser_generate.add_argument('--modifier', '-m', metavar="python_module", default=None)
 
+    parser_list.add_argument('--yaml-file', '-f', metavar="filename", default="test.yaml")
+    parser_list.add_argument('--modifier', '-m', metavar="python_module", default=None)
     group = parser_list.add_mutually_exclusive_group()
     group.add_argument("--count", action="store_true", help="get number of tests (after template expansion and filtering).")
     group.add_argument("-H","--human-readable", action="store_true", help="get test list in a concise way.")
