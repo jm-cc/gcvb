@@ -5,6 +5,7 @@ import bisect
 import random
 import subprocess
 import os
+import sys
 from . import db
 from . import job as gcvb_job
 from . import yaml_input
@@ -37,13 +38,15 @@ class Job(object):
         return self.name()
 
 class JobRunner(object):
-    def __init__(self, num_cores, run_id, config, started_first):
+    def __init__(self, num_cores, run_id, config, started_first, max_concurrent, verbose):
         self.num_cores = num_cores
         self.running_tests = {}
         self.condition = threading.Condition()
         self.available_cores = num_cores
         self.lock = threading.Lock()
         self.started_first = started_first
+        self.max_concurrent = max_concurrent # 0 means unlimited
+        self.verbose = verbose
 
         self.run_id = run_id
         self.base_id = db.get_base_from_run(run_id)
@@ -91,7 +94,10 @@ class JobRunner(object):
         db.set_db(os.path.abspath("../../gcvb.db"))
 
     def _run_job(self, job):
+        self.print(f"[{job.test_id}][Step {job.step}] Started")
+        self.print(f"[{job.test_id}][Step {job.step}] cmd : {job.launch_command}")
         job.run()
+        self.print(f"[{job.test_id}][Step {job.step}] Completed (return code : {job.return_code})")
         with self.lock:
             self.available_cores += job.num_cores()
             del self.running_tests[job.test_id]
@@ -108,6 +114,7 @@ class JobRunner(object):
                              SET end_date = CURRENT_TIMESTAMP, status = 2
                              WHERE id = ? and run_id = ?"""
                     cursor.execute(req,[job.test_id_db,job.run_id])
+                    self.print(f"[{job.test_id}] Completed (Last return code : {job.return_code})")
                 else:
                     req = """UPDATE test
                              SET status = 0
@@ -155,6 +162,10 @@ class JobRunner(object):
 
     def _nextjob(self):
         with self.lock:
+            # We don't take a job if we reached the max_concurrent limit
+            if self.max_concurrent and self.max_concurrent < len(self.running_tests):
+                return None
+
             # if we take elect an unstarted job, we must mark it as started while the database is locked for us.
             # the elect process must be done with the lock on the database.
             conn = db.get_exclusive_access()
@@ -188,3 +199,7 @@ class JobRunner(object):
                     cursor.execute(req,[to_be_run.test_id_db])
             conn.close()
             return to_be_run
+
+    def print(self, *objects, sep=' ', end='\n', file=sys.stdout, flush=False):
+        if self.verbose:
+          print(*objects, sep=sep, end=end, file=file, flush=flush)
