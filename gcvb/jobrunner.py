@@ -100,7 +100,7 @@ class JobRunner(object):
         self.print(f"[{job.test_id}][Step {job.step}] Completed (return code : {job.return_code})")
         with self.lock:
             self.available_cores += job.num_cores()
-            del self.running_tests[job.test_id]
+            del self.running_tests[(job.test_id,job.step)]
 
             conn = db.get_exclusive_access()
             with conn:
@@ -111,15 +111,15 @@ class JobRunner(object):
                 cursor.execute(req, [job.return_code, job.step, job.test_id_db])
                 if job.is_last or job.return_code!=exit_success:
                     req = """UPDATE test
-                             SET end_date = CURRENT_TIMESTAMP, status = 2
+                             SET end_date = CURRENT_TIMESTAMP
                              WHERE id = ? and run_id = ?"""
                     cursor.execute(req,[job.test_id_db,job.run_id])
                     self.print(f"[{job.test_id}] Completed (Last return code : {job.return_code})")
-                else:
-                    req = """UPDATE test
-                             SET status = 0
-                             WHERE id = ? and run_id = ?"""
-                    cursor.execute(req,[job.test_id_db,job.run_id])
+                # Children are now ready
+                req = """UPDATE task
+                         SET status = -2
+                         WHERE parent = ? and test_id = ?"""
+                cursor.execute(req,[job.step, job.test_id_db])
             conn.close()
 
         with self.condition:
@@ -138,7 +138,7 @@ class JobRunner(object):
                 with self.lock:
                     self.available_cores -= job.num_cores()
                     t = threading.Thread(name = job.name(), target = lambda: self._run_job(job))
-                    self.running_tests[job.test_id] = t
+                    self.running_tests[(job.test_id,job.step)] = t
                 t.start()
             job = self._nextjob()
         db.end_run(self.run_id)
@@ -171,13 +171,11 @@ class JobRunner(object):
             conn = db.get_exclusive_access()
             with conn:
                 cursor = conn.cursor()
-                # Get first pending task (status -2) of a pending test (status 0)
-                req = """SELECT MIN(step) as step, test_id, name FROM task
+                # Get ready tasks (status -2)
+                req = """SELECT step, test_id, name FROM task
                          INNER JOIN test ON task.test_id=test.id
                          INNER JOIN run ON run.id = test.run_id
-                         WHERE task.status = -2
-                         GROUP BY test_id
-                         HAVING test.status = 0 AND run.id = ?"""
+                         WHERE task.status = -2 AND run.id = ?"""
                 cursor.execute(req,[self.run_id])
                 available_jobs = [self.tests[test["name"]][test["step"]] for test in cursor.fetchall()]
                 if (self.started_first):
@@ -193,10 +191,6 @@ class JobRunner(object):
                              SET start_date = CURRENT_TIMESTAMP, status = -1
                              WHERE step = ? AND test_id = ?"""
                     cursor.execute(req,[to_be_run.step, to_be_run.test_id_db])
-                    req = """UPDATE test
-                             SET status = 1
-                             WHERE id = ?"""
-                    cursor.execute(req,[to_be_run.test_id_db])
             conn.close()
             return to_be_run
 

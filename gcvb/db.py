@@ -24,15 +24,15 @@ CREATE TABLE test(id         INTEGER PRIMARY KEY,
                   start_date INTEGER,
                   end_date   INTEGER,
                   run_id     INTEGER,
-                  status     INTEGER DEFAULT 0, -- 0 pending, 1 running, 2 completed
                   FOREIGN KEY(run_id) REFERENCES run(id));
 
 CREATE TABLE task(id         INTEGER PRIMARY KEY,
                   step       INTEGER,
+                  parent     INTEGER,
                   start_date INTEGER,
                   end_date   INTEGER,
                   test_id    INTEGER,
-                  status     INTEGER DEFAULT -2, -- >=0, exit_status | -1 running | -2 pending
+                  status     INTEGER DEFAULT -3, -- >=0, exit_status | -1 running | -2 ready | -3 pending
                   FOREIGN KEY(test_id) REFERENCES test(id));
 
 CREATE TABLE valid(id        INTEGER PRIMARY KEY,
@@ -112,32 +112,37 @@ def add_run(cursor, gcvb_id, config_id):
     return cursor.lastrowid
 
 @with_connection
-def add_tests(cursor, run, test_list):
+def add_tests(cursor, run, test_list, chain):
     tests=[(t["id"],run) for t in test_list]
     for t in test_list:
         cursor.execute("INSERT INTO test(name,run_id) VALUES(?,?)",[t["id"],run])
         t["id_db"]=cursor.lastrowid
         step=0
+        parent = 0
         for task in t["Tasks"]:
-          step += 1
-          cursor.execute("INSERT INTO task(step,test_id) VALUES(?,?)",
-                         [step,t["id_db"]])
-          for valid in task.get("Validations",[]):
             step += 1
-            cursor.execute("INSERT INTO task(step,test_id) VALUES (?,?)",
-                           [step,t["id_db"]])
+            predecessor = step - 1 if chain else parent
+            status = -3 if parent else -2 #Ready (-2) if parent is 0 else Pending (-3)
+            cursor.execute("INSERT INTO task(step,parent,test_id,status) VALUES(?,?,?,?)",
+                           [step, predecessor, t["id_db"], status])
+            parent = step
+            for valid in task.get("Validations",[]):
+                step += 1
+                predecessor = step - 1 if chain else parent
+                cursor.execute("INSERT INTO task(step,parent,test_id) VALUES (?,?,?)",
+                               [step,predecessor,t["id_db"]])
 
 
 @with_connection
 def start_test(cursor,run,test_id):
     cursor.execute("""UPDATE test
-                      SET start_date = CURRENT_TIMESTAMP, status = 1
+                      SET start_date = CURRENT_TIMESTAMP,
                       WHERE id = ? AND run_id = ?""",[test_id,run])
 
 @with_connection
 def end_test(cursor, run, test_id):
     cursor.execute("""UPDATE test
-                      SET end_date = CURRENT_TIMESTAMP, status = 2
+                      SET end_date = CURRENT_TIMESTAMP,
                       WHERE id = ? AND run_id = ?""",[test_id,run])
 
 @with_connection
