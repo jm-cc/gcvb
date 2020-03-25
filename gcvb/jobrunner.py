@@ -24,6 +24,7 @@ class Job(object):
         self.type = job_type
         self.is_first = False
         self.is_last = False
+        self.is_valid = False
         self.return_code = -1
     def num_cores(self):
         return self.num_process*self.num_threads
@@ -83,6 +84,7 @@ class JobRunner(object):
                                                                     self.config, at_job_creation)
                     j = Job(self.run_id, test, test_id_in_db[test], step, launch_command,
                             at_job_creation["nprocs"], at_job_creation["nthreads"], "validation")
+                    j.is_valid = True
                     tasks[step] = j
             tasks[1].is_first = True
             tasks[step].is_last = True
@@ -109,17 +111,20 @@ class JobRunner(object):
                          SET end_date = CURRENT_TIMESTAMP, status = ?
                          WHERE step = ? and test_id = ?"""
                 cursor.execute(req, [job.return_code, job.step, job.test_id_db])
-                if job.is_last or job.return_code!=exit_success:
+                # A test is stopped only if a Task fails (Validation failures do not matter)
+                stopped_by_error = job.return_code != exit_success if not(job.is_valid) else False
+                if job.is_last or stopped_by_error:
                     req = """UPDATE test
                              SET end_date = CURRENT_TIMESTAMP
                              WHERE id = ? and run_id = ?"""
                     cursor.execute(req,[job.test_id_db,job.run_id])
                     self.print(f"[{job.test_id}] Completed (Last return code : {job.return_code})")
-                # Children are now ready
-                req = """UPDATE task
-                         SET status = -2
-                         WHERE parent = ? and test_id = ?"""
-                cursor.execute(req,[job.step, job.test_id_db])
+                if not(stopped_by_error):
+                    # Children are now ready
+                    req = """UPDATE task
+                             SET status = -2
+                             WHERE parent = ? and test_id = ?"""
+                    cursor.execute(req,[job.step, job.test_id_db])
             conn.close()
 
         with self.condition:
