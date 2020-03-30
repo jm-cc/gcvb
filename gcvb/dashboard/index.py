@@ -2,6 +2,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import os
 
 if __name__ == '__main__':
     from app import app
@@ -9,6 +10,9 @@ if __name__ == '__main__':
 else:
     from .app import app
     from .apps import runs, run, test, history
+import flask
+
+cwd = os.getcwd()
 
 url =  dcc.Location(id='url', refresh=False)
 
@@ -28,9 +32,14 @@ content = html.Div(id="page-content")
 
 app.layout=html.Div([url, navbar, content])
 
+
+@app.server.route("/files/<base>/<test>/<file>")
+def serve_static(base,test,file):
+    #TODO : only serves allowed files !!
+    return flask.send_file(f"{cwd}/results/{base}/{test}/{file}")
+
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
-
 def display_page(pathname):
     if not pathname:
         return 'Bonjour'
