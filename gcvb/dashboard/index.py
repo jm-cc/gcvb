@@ -6,10 +6,10 @@ import os
 
 if __name__ == '__main__':
     from app import app
-    from apps import runs, run, test, history
+    from apps import runs, run, test, history, loader
 else:
     from .app import app
-    from .apps import runs, run, test, history
+    from .apps import runs, run, test, history, loader
 import flask
 
 cwd = os.getcwd()
@@ -34,8 +34,14 @@ app.layout=html.Div([url, navbar, content])
 
 
 @app.server.route("/files/<base>/<test>/<file>")
-def serve_static(base,test,file):
-    #TODO : only serves allowed files !!
+def serve_from_results(base,test,file):
+    base=int(base)
+    if base not in loader.loader.allowed_files:
+        flask.abort(404)
+    if test not in loader.loader.allowed_files[base]:
+        flask.abort(404)
+    if file not in loader.loader.allowed_files[base][test]:
+        flask.abort(404)
     return flask.send_file(f"{cwd}/results/{base}/{test}/{file}")
 
 @app.callback(Output('page-content', 'children'),
