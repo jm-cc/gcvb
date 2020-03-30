@@ -24,20 +24,20 @@ class BaseLoader(object):
         return self.loaded[(ya,mod)]
 
     def __populate_allowed_files(self, ya, mod):
-        s = defaultdict(set)
+        s = defaultdict(dict)
         for test_id,test in self.loaded[(ya,mod)]["Tests"].items():
             for c,task in enumerate(test["Tasks"]):
                 at_job_creation = {}
                 job.fill_at_job_creation_task(at_job_creation, task, f"{test_id}_{c}", self.config)
                 for file in task.get("serve_from_results",[]):
                     filename = job.format_launch_command(file["file"], self.config, at_job_creation)
-                    s[test_id].add(filename)
+                    s[test_id][filename] = file
                 for valid in task.get("Validations",[]):
                     job.fill_at_job_creation_validation(at_job_creation, valid, self.data_root,
                                                         test["data"], self.config, self.references)
                     for file in valid.get("serve_from_results",[]):
                         filename = job.format_launch_command(file["file"], self.config, at_job_creation)
-                        s[test_id].add(filename)
+                        s[test_id][filename] = file
         return s
 
 loader = BaseLoader()

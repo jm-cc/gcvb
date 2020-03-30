@@ -42,7 +42,8 @@ def serve_from_results(base,test,file):
         flask.abort(404)
     if file not in loader.loader.allowed_files[base][test]:
         flask.abort(404)
-    return flask.send_file(f"{cwd}/results/{base}/{test}/{file}")
+    mimetype = loader.loader.allowed_files[base][test][file].get("mimetype","text/plain")
+    return flask.send_file(f"{cwd}/results/{base}/{test}/{file}", mimetype=mimetype)
 
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
