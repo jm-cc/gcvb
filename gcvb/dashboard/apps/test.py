@@ -3,6 +3,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 import gcvb.validation as val
 import gcvb.db as db
+import gcvb.job as job
 import gcvb.yaml_input as yaml_input
 import os
 if __name__ == '__main__':
@@ -17,19 +18,30 @@ def data_preparation(run, test_id):
     run_summary=db.retrieve_test(run,test_id)
     base = loader.load_base(run)
 
+    test = base["Tests"][test_id]
+
     data = {}
+    data["base_id"] = db.get_base_from_run(run)
     data["Tasks"] = []
     data["test_id"] = test_id
-    data["description"] = base["Tests"][test_id].get("description","")
+    data["description"] = test.get("description","")
     data["status"] = "success"
 
-    for task in base["Tests"][test_id]["Tasks"]:
+    for i,task in enumerate(test["Tasks"]):
+        ajc = {}
+        job.fill_at_job_creation_task(ajc, task, f"{test_id}_{i}", loader.config)
         d = {}
         data["Tasks"].append(d)
         d["executable"] = task["executable"]
         d["options"] = task["options"]
         d["metrics"] = []
+        d["from_results"] = [{"id" : f["id"],
+                              "file" : job.format_launch_command(f["file"], loader.config, ajc)}
+                             for f in task.get("serve_from_results",[])]
         for validation in task.get("Validations",[]):
+            job.fill_at_job_creation_validation(ajc, validation,
+                                                loader.data_root,  test["data"],
+                                                loader.config, loader.references)
             v = {}
             d["metrics"].append(v)
             v["id"]=validation["id"]
@@ -40,6 +52,9 @@ def data_preparation(run, test_id):
                 data["status"]="failure"
             elif float(v["distance"])>float(v["tolerance"]):
                 data["status"]="failure"
+            v["from_results"] = [{"id" : f["id"],
+                                  "file" : job.format_launch_command(f["file"], loader.config, ajc)}
+                                 for f in validation.get("serve_from_results",[])]
     return data
 
 #Content
@@ -75,6 +90,12 @@ def details_panel(data):
     el_list = []
     for c,t in enumerate(data["Tasks"], 1):
         el_list.append(html.H6("{!s} - {} {}".format(c,t["executable"],t["options"])))
+        if t["from_results"]:
+            l = ["Files :"]
+            for f in t["from_results"]:
+                l.append(" ")
+                l.append(html.A(href=f"/files/{data['base_id']}/{data['test_id']}/{f['file']}", children=f["id"]))
+            el_list.append(html.Span(l))
         if t["metrics"]:
             el_list.append(metric_table(data["test_id"],t["metrics"]))
     return html.Div([html.H5("Details"),*el_list])
