@@ -58,14 +58,27 @@ def data_preparation(run, test_id):
     return data
 
 #Content
-def metric_table(test_id,list_of_metrics):
+def metric_table(data, list_of_metrics):
+    test_id = data["test_id"]
+
     h=[("Metric","55%"),("Type","25%"),("Distance","8%"),("Target","8%"),("H","2%")]
     header=html.Tr([html.Th(col, style={"width" : width}) for col,width in h])
 
     rows = []
     for m in list_of_metrics:
         row = []
-        for col in ["id", "type", "distance", "tolerance"]:
+
+        if m["from_results"]:
+            l = []
+            for f in m["from_results"]:
+                l.append(html.A(href=f"/files/{data['base_id']}/{test_id}/{f['file']}", children=f["id"]))
+                l.append(", ")
+            cell = html.Td([m["id"]]+[" ("]+l[:-1]+[")"])
+        else:
+            cell = html.Td(m["id"])
+        row.append(cell)
+
+        for col in ["type", "distance", "tolerance"]:
             cell = html.Td(m[col])
             row.append(cell)
         #link to history
@@ -97,7 +110,7 @@ def details_panel(data):
                 l.append(html.A(href=f"/files/{data['base_id']}/{data['test_id']}/{f['file']}", children=f["id"]))
             el_list.append(html.Span(l))
         if t["metrics"]:
-            el_list.append(metric_table(data["test_id"],t["metrics"]))
+            el_list.append(metric_table(data, t["metrics"]))
     return html.Div([html.H5("Details"),*el_list])
 
 #Page Generator
