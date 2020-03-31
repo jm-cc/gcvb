@@ -36,8 +36,8 @@ def data_preparation(run, test_id):
             v["type"]=validation.get("type","file_comparison")
             v["tolerance"]=validation["tolerance"]
             v["distance"]=run_summary["metrics"].get(v["id"],"N/A") #Todo, it's ok only for file comparison...
-            if v["distance"]=="N/A" and data["status"]!="failure":
-                data["status"]="missing_validation"
+            if v["distance"]=="N/A":
+                data["status"]="failure"
             elif float(v["distance"])>float(v["tolerance"]):
                 data["status"]="failure"
     return data
