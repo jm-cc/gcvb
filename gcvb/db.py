@@ -136,13 +136,13 @@ def add_tests(cursor, run, test_list, chain):
 @with_connection
 def start_test(cursor,run,test_id):
     cursor.execute("""UPDATE test
-                      SET start_date = CURRENT_TIMESTAMP,
+                      SET start_date = CURRENT_TIMESTAMP
                       WHERE id = ? AND run_id = ?""",[test_id,run])
 
 @with_connection
 def end_test(cursor, run, test_id):
     cursor.execute("""UPDATE test
-                      SET end_date = CURRENT_TIMESTAMP,
+                      SET end_date = CURRENT_TIMESTAMP
                       WHERE id = ? AND run_id = ?""",[test_id,run])
 
 @with_connection
