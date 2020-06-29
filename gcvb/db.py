@@ -58,7 +58,7 @@ def set_db(db_path):
     database=db_path
 
 def connect(file,f, *args, **kwargs):
-    conn=sqlite3.connect(file)
+    conn=sqlite3.connect(file, timeout=5)
     conn.row_factory=sqlite3.Row
     c=conn.cursor()
     try:
