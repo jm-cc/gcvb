@@ -101,6 +101,7 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
             step = 0
             for c,t in enumerate(test["Tasks"]):
                 step += 1
+                f.write("export GCVB_STEP_ID={!s}\n".format(step))
                 f.write("python3 -m gcvb db start_task {0} {1} 0\n".format(test["id_db"],step))
                 at_job_creation={}
                 fill_at_job_creation_task(at_job_creation, t, test["id"]+"_"+str(c), config)
@@ -109,6 +110,7 @@ def write_script(tests, config, data_root, base_id, run_id, *, job_file="job.sh"
                 f.write("python3 -m gcvb db end_task {0} {1} $?\n".format(test["id_db"],step))
                 for d,v in enumerate(t.get("Validations",[])):
                     step += 1
+                    f.write("export GCVB_STEP_ID={!s}\n".format(step))
                     f.write("python3 -m gcvb db start_task {0} {1} 0\n".format(test["id_db"],step))
                     fill_at_job_creation_validation(at_job_creation, v, data_root, test["data"], config, valid)
                     f.write(format_launch_command(v["launch_command"],config,at_job_creation))

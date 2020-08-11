@@ -180,8 +180,8 @@ def end_run(cursor,run):
                           WHERE id = ?""",[run])
 
 @with_connection
-def add_metric(cursor, run_id, test_id, name, value):
-    cursor.execute("INSERT INTO valid(metric,value,test_id) VALUES (?,?,?)",[name,value,test_id])
+def add_metric(cursor, run_id, test_id, step, name, value):
+    cursor.execute("INSERT INTO valid(metric,value,test_id,task_step) VALUES (?,?,?,?)",[name,value,test_id, step])
 
 @with_connection
 def get_last_run(cursor):

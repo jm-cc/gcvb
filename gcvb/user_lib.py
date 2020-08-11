@@ -3,12 +3,13 @@ import os
 
 def add_metric(name, value):
     db.set_db("../../../gcvb.db")
-    for env in ["GCVB_RUN_ID","GCVB_TEST_ID"]:
+    for env in ["GCVB_RUN_ID","GCVB_TEST_ID","GCVB_STEP_ID"]:
         if env not in os.environ:
             raise Exception("Environment variable {} is not defined.".format(env))
     test_id=os.environ["GCVB_TEST_ID"] # string as in the yaml file.
     run_id=os.environ["GCVB_RUN_ID"] # integer id
-    db.add_metric(run_id, test_id, name, value)
+    step_id=os.environ["GCVB_STEP_ID"]
+    db.add_metric(run_id, test_id, step_id, name, value)
 
 def get_tests(run=None):
     if not(run):

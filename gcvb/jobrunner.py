@@ -32,6 +32,7 @@ class Job(object):
         env = dict(os.environ)
         env["GCVB_RUN_ID"] = f"{self.run_id}"
         env["GCVB_TEST_ID"] = f"{self.test_id_db}"
+        env["GCVB_STEP_ID"] = f"{self.step}"
         self.return_code = subprocess.call(self.launch_command, shell=True, cwd=self.test_id, env=env)
     def name(self):
         return f"{self.test_id}_{self.num_process}x{self.num_threads}_{self.type}"
