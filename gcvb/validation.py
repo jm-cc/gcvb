@@ -11,11 +11,13 @@ class Report:
                 self.validation_base[t["id"]]={}
                 for ta in t["Tasks"]:
                     for v in ta.get("Validations",[]):
-                        d={}
-                        self.validation_base[t["id"]][v["id"]]=d
-                        for k in ["id","tolerance","type","reference"]:
-                            if k in v:
-                                d[k]=v[k]
+                        for m in v.get("Metrics", []):
+                            d={}
+                            self.validation_base[t["id"]][m["id"]]=d
+                            for k in ["id","tolerance","type","reference"]:
+                                if k in m:
+                                    d[k]=m[k]
+                            d["launch_type"] = v["type"]
         self.success={}
         self.failure={}
         self.missing_validations={}
@@ -27,21 +29,23 @@ class Report:
                     if self.status[test_id]!="failure":
                         self.status[test_id]="missing_validation"
                     continue
-                validation_type=valid.setdefault("type","file_comparison")
-                if validation_type=="file_comparison":
+                validation_type=valid.setdefault("type","absolute" if valid["launch_type"]=="file_comparison" else "relative")
+                if validation_type=="absolute":
                     t=float(test[validation_metric])
                     self.__within_tolerance(t,test_id,valid)
-                elif validation_type=="configuration_independent":
-                    rel_change=relative_change(float(test[validation_metric]),float(valid["reference"]))
+                elif validation_type=="relative":
+                    if isinstance(valid["reference"],dict):
+                        if configuration in valid["reference"]:
+                            ref = float(valid["reference"][configuration])
+                        else:
+                            continue
+                    else:
+                        ref = float(valid["reference"])
+                    rel_change=relative_change(float(test[validation_metric]),ref)
                     t=abs(rel_change)
                     self.__within_tolerance(t,test_id,valid)
-                elif validation_type=="configuration_dependent":
-                    if configuration in valid["reference"]:
-                        rel_change=relative_change(float(test[validation_metric]),float(valid["reference"][configuration]))
-                        t=abs(rel_change)
-                        self.__within_tolerance(t,test_id,valid)
                 else:
-                    raise ValueError("Unknown validation type \"%s\". Should be in (file_comparison,configuration_independent,configuration_dependent)" % validation_type)
+                    raise ValueError("Unknown validation type \"%s\". Should be in (absolute, relative)" % validation_type)
 
     def __within_tolerance(self,test_value,test_id,valid):
         res={"id" : valid["id"], "tolerance" : valid["tolerance"], "distance" : test_value, "type" : valid["type"]}
