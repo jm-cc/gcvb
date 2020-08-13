@@ -42,19 +42,29 @@ def data_preparation(run, test_id):
             job.fill_at_job_creation_validation(ajc, validation,
                                                 loader.data_root,  test["data"],
                                                 loader.config, loader.references)
-            v = {}
-            d["metrics"].append(v)
-            v["id"]=validation["id"]
-            v["type"]=validation.get("type","file_comparison")
-            v["tolerance"]=validation["tolerance"]
-            v["distance"]=run_summary["metrics"].get(v["id"],"N/A") #Todo, it's ok only for file comparison...
-            if v["distance"]=="N/A":
-                data["status"]="failure"
-            elif float(v["distance"])>float(v["tolerance"]):
-                data["status"]="failure"
-            v["from_results"] = [{"id" : f["id"],
-                                  "file" : job.format_launch_command(f["file"], loader.config, ajc)}
-                                 for f in validation.get("serve_from_results",[])]
+            for metric in validation.get("Metrics",[]):
+                v = {}
+                d["metrics"].append(v)
+                v["id"]=metric["id"]
+                v["type"]=metric.get("type","absolute" if validation["type"]=="file_comparison" else "relative")
+                v["tolerance"]=metric["tolerance"]
+                if v["type"] == "absolute":
+                    v["distance"]=run_summary["metrics"].get(v["id"],"N/A")
+                else:
+                    if v["id"] in run_summary["metrics"]:
+                        if isinstance(metric["reference"], dict):
+                            v["distance"] = "N/A" # no support for configuration dependent metric yet
+                        else:
+                            v["distance"] = abs(float(run_summary["metrics"][v["id"]]) - float(metric["reference"])) / float(metric["reference"])
+                    else:
+                        v["distance"] = "N/A"
+                if v["distance"]=="N/A":
+                    data["status"]="failure"
+                elif float(v["distance"])>float(v["tolerance"]):
+                    data["status"]="failure"
+                v["from_results"] = [{"id" : f["id"],
+                                      "file" : job.format_launch_command(f["file"], loader.config, ajc)}
+                                     for f in validation.get("serve_from_results",[])]
     return data
 
 #Content

@@ -64,7 +64,7 @@ def fill_at_job_creation_task(at_job_creation, task, full_id, config):
     return None
 
 def fill_at_job_creation_validation(at_job_creation, validation, data_root, ref_data, config, valid):
-    at_job_creation["va_id"]=validation["id"]
+    at_job_creation["va_id"]=validation["Metrics"][0]["id"]
     at_job_creation["va_executable"]=validation["executable"]
     if validation["type"]=="file_comparison":
         #specific values for file comparison
