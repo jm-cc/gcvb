@@ -108,11 +108,16 @@ class Run():
         self.gcvb_base = yaml_input.load_yaml_from_run(self.run_id)
         b = self.gcvb_base["Tests"]
         self.Tests = {t["name"] : Test(b[t["name"]], self.config, t["name"], t["start_date"], t["end_date"]) for t in self.db_tests}
-        # Fill recorded_metrics status
-        recorded = db.load_report_n(self.run_id)
+        # Fill infos for every step
+        recorded_metrics = db.load_report_n(self.run_id)
+        step_info = db.get_steps(self.run_id)
         for test_id, test in self.Tests.items():
-            for step, metrics in recorded[test_id].items():
+            for step, metrics in recorded_metrics[test_id].items():
                 test.Steps[step-1].recorded_metrics = metrics
+            for step, step_info in step_info[test_id].items():
+                test.Steps[step-1].start_date = step_info["start_date"]
+                test.Steps[step-1].end_date = step_info["end_date"]
+                test.Steps[step-1].status = step_info["status"]
 
     def __init__(self, run_id):
         self.run_id = run_id
