@@ -2,6 +2,7 @@ import sqlite3
 import os
 import glob
 import gzip
+from collections import defaultdict
 from . import util
 
 #SCRIPTS
@@ -190,6 +191,11 @@ def get_last_run(cursor):
     return (res["id"],res["gcvb_id"])
 
 @with_connection
+def get_run_infos(cursor, run_id):
+    cursor.execute("SELECT * from run WHERE id = ?", [run_id])
+    return cursor.fetchone()
+
+@with_connection
 def load_report(cursor, run_id):
     a="""SELECT metric, value, name
          FROM valid
@@ -200,6 +206,19 @@ def load_report(cursor, run_id):
     res={}
     for row in cursor.fetchall():
         res.setdefault(row["name"],{})[row["metric"]]=row["value"]
+    return res
+
+@with_connection
+def load_report_n(cursor, run_id):
+    a="""SELECT metric, value, name, task_step
+         FROM valid
+         INNER JOIN test
+         ON test_id=test.id
+         WHERE test.run_id=(?)"""
+    cursor.execute(a,[run_id])
+    res = defaultdict(lambda : defaultdict(dict))
+    for t in cursor.fetchall():
+        res[t["name"]][t["task_step"]][t["metric"]]=t["value"]
     return res
 
 @with_connection

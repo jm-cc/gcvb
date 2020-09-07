@@ -1,4 +1,7 @@
 from enum import IntEnum
+from . import db
+from . import yaml_input
+
 class JobStatus(IntEnum):
     unlinked = -4
     pending = -3
@@ -78,7 +81,7 @@ class Task():
                 self.Validations.append(FileComparisonValidation(v, config))
 
 class Test():
-    def __init__(self, test_dict, config):
+    def __init__(self, test_dict, config, name=None, start_date=None, end_date=None):
         self.raw_dict = test_dict
         # Tasks
         self.Tasks = []
@@ -89,4 +92,34 @@ class Test():
         for t in self.Tasks:
             self.Steps.append(t)
             for v in t.Validations:
-                self.Steps.append(t)
+                self.Steps.append(v)
+        # Infos
+        self.name = name
+        self.start_date = start_date
+        self.end_date = end_date
+
+    def __repr__(self):
+        return f"{{id : {self.name}, status : TODO}}"
+
+class Run():
+    def __test_db_to_objects(self):
+        self.db_tests = db.get_tests(self.run_id)
+        self.gcvb_base = yaml_input.load_yaml_from_run(self.run_id)
+        b = self.gcvb_base["Tests"]
+        self.Tests = {t["name"] : Test(b[t["name"]], self.config, t["name"], t["start_date"], t["end_date"]) for t in self.db_tests}
+        # Fill recorded_metrics status
+        recorded = db.load_report_n(self.run_id)
+        for test_id, test in self.Tests.items():
+            for step, metrics in recorded[test_id].items():
+                test.Steps[step-1].recorded_metrics = metrics
+
+    def __init__(self, run_id):
+        self.run_id = run_id
+
+        run_infos = db.get_run_infos(run_id)
+        self.start_date = run_infos["start_date"]
+        self.end_date = run_infos["end_date"]
+        self.config = run_infos["config_id"]
+        self.gcvb_id = run_infos["gcvb_id"]
+
+        self.__test_db_to_objects()
