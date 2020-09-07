@@ -292,3 +292,15 @@ def retrieve_history(cursor, test_id, metric_id):
     cursor.execute(request,[test_id,metric_id])
     res=cursor.fetchall()
     return res
+
+@with_connection
+def get_steps(cursor, run_id):
+    request="""SELECT test.name, step, task.start_date, task.end_date, status
+               FROM task
+               INNER JOIN test ON test.id=task.test_id
+               WHERE test.run_id = ?"""
+    cursor.execute(request, [run_id])
+    res = defaultdict(lambda : defaultdict(dict))
+    for t in cursor.fetchall():
+        res[t["name"]][t["step"]]=dict(t)
+    return res
