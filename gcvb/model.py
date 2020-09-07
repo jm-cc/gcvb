@@ -7,6 +7,7 @@ class JobStatus(IntEnum):
     pending = -3
     ready = -2
     running = -1
+    exit_success = 0
 
 class AbsoluteMetric:
     def __init__(self, reference, tolerance, unit = None):
