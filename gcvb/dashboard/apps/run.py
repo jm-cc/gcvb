@@ -5,7 +5,7 @@ import gcvb.validation as val
 import gcvb.db as db
 import gcvb.yaml_input as yaml_input
 import os
-from .loader import loader
+from gcvb.loader import loader as loader
 
 if __name__ == '__main__':
     from app import app
