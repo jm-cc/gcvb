@@ -97,6 +97,20 @@ class Task():
                 self.Validations.append(Validation(v, config))
             else:
                 self.Validations.append(FileComparisonValidation(v, config))
+        self.start_date = None
+        self.end_date = None
+
+    @property
+    def completed(self):
+        return bool(self.end_date)
+
+    @property
+    def success(self):
+        if not self.completed:
+            return False
+        if self.status != JobStatus.exit_success:
+            return False
+        return all([v.success for v in self.Validations])
 
 class Test():
     def __init__(self, test_dict, config, name=None, start_date=None, end_date=None):
