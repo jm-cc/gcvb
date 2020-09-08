@@ -168,3 +168,11 @@ class Run():
         self.gcvb_id = run_infos["gcvb_id"]
 
         self.__test_db_to_objects()
+
+    @property
+    def completed(self):
+        return bool(self.end_date)
+
+    @property
+    def success(self):
+        return all([test.success for test in self.Tests.values()])
