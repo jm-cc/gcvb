@@ -4,12 +4,13 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import os
 
+import gcvb.loader as loader
 if __name__ == '__main__':
     from app import app
-    from apps import runs, run, test, history, loader
+    from apps import runs, run, test, history
 else:
     from .app import app
-    from .apps import runs, run, test, history, loader
+    from .apps import runs, run, test, history
 import flask
 
 cwd = os.getcwd()

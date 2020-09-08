@@ -11,7 +11,7 @@ if __name__ == '__main__':
 else:
     from ..app import app
 from dash.dependencies import Input, Output
-from .loader import loader
+from gcvb.loader import loader as loader
 
 #Data
 def data_preparation(run, test_id):
