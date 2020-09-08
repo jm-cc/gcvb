@@ -60,6 +60,23 @@ class Validation:
                 else:
                     self.expected_metrics[metric["id"]] = AbsoluteMetric(ref, metric["tolerance"])
 
+    @property
+    def missing_metrics(self):
+        e_m = set(self.expected_metrics.keys())
+        r_m = set(self.recorded_metrics.keys())
+        if e_m.intersection(r_m) == e_m:
+            return False
+        return True
+
+    @property
+    def success(self):
+        if self.missing_metrics:
+            return False
+        for metric_id, metric in self.expected_metrics.items():
+            if not metric.within_tolerance(self.recorded_metrics[metric_id]):
+                return False
+        return True
+
 class FileComparisonValidation(Validation):
     default_type = "absolute"
     default_reference = 0
