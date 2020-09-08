@@ -130,6 +130,14 @@ class Test():
         self.start_date = start_date
         self.end_date = end_date
 
+    @property
+    def completed(self):
+        return bool(self.end_date)
+
+    @property
+    def success(self):
+        return all([t.success for t in self.Tasks])
+
     def __repr__(self):
         return f"{{id : {self.name}, status : TODO}}"
 
