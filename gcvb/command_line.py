@@ -14,6 +14,7 @@ from . import validation
 from . import snippet
 from . import generate_refs
 from . import jobrunner
+from . import model
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -231,30 +232,18 @@ def main():
                 time.sleep(args.frequency)
                 previous_completed_tests = len(completed_tests)
 
-
-        started_but_not_finished=list(filter(lambda x: not x["end_date"] and x["start_date"], tests))
-        started_but_not_finished=[t["name"] for t in started_but_not_finished]
-        if (started_but_not_finished):
-            print(f"{len(started_but_not_finished)} tests did start but did not finish : ")
-            print(started_but_not_finished)
-        print("Tests completed : {!s}/{!s}".format(len(completed_tests),len(tests)))
-
-        tmp=db.load_report(run_id)
-        report=validation.Report(a,tmp)
-        if report.is_success():
-            if finished:
-                print("Success!")
-            else:
-                print("No failure yet, computation in progress...")
-        else:
-            if report.missing_validations:
-                #should we show only missing_validations for completed tests ?
-                print("Some validation metrics are missing :")
-                pprint.pprint(report.missing_validations)
-            failed=report.get_failed_tests()
-            print("{!s} failure(s) : {!s}".format(len(failed),list(failed)))
+        run = model.Run(run_id)
+        rl = len(run.get_running_tests())
+        tt = len(run.Tests)
+        if not run.completed:
+            print(f"{rl} are still running. (Completed : {tt-rl}/{tt})")
+        if run.success:
+            print("Success!")
+        if run.get_failures():
+            print(f"Failure : {len(run.get_failures())} failed.")
+            print()
             print("Details of failures :")
-            pprint.pprint(report.failure)
+            pprint.pprint(run.get_failures())
 
     if args.command == "snippet":
         snippet.display(args)
