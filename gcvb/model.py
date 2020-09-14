@@ -60,13 +60,22 @@ class Validation:
                 else:
                     self.expected_metrics[metric["id"]] = AbsoluteMetric(ref, metric["tolerance"])
 
-    @property
-    def missing_metrics(self):
+    def get_missing_metrics(self):
         e_m = set(self.expected_metrics.keys())
         r_m = set(self.recorded_metrics.keys())
-        if e_m.intersection(r_m) == e_m:
-            return False
-        return True
+        return e_m.difference(e_m.intersection(r_m))
+
+    def get_out_of_tolerance_metrics(self):
+        res = []
+        for k,v in self.recorded_metrics.items():
+            if k in self.expected_metrics:
+                if not(self.expected_metrics[k].within_tolerance(v)):
+                    res.append((k, self.expected_metrics[k], v))
+        return res
+
+    @property
+    def missing_metrics(self):
+        return bool(not(self.get_missing_metrics()))
 
     @property
     def success(self):
@@ -112,6 +121,22 @@ class Task():
             return False
         return all([v.success for v in self.Validations])
 
+    def get_failures(self):
+        res = []
+        if self.completed:
+            if self.status > JobStatus.exit_success:
+                res.append(ExitFailure(self.status))
+            # Missing metric is a failure only if the task is completed
+            for v in self.Validations:
+                missing = v.get_missing_metrics()
+                for mm in missing:
+                    res.append(MissingMetric(mm))
+        for v in self.Validations:
+            oot = v.get_out_of_tolerance_metrics()
+            for m_id,m,v in oot:
+                res.append(OutOfTolerance(m_id,m,v))
+        return res
+
 class Test():
     def __init__(self, test_dict, config, name=None, start_date=None, end_date=None):
         self.raw_dict = test_dict
@@ -140,6 +165,9 @@ class Test():
 
     def __repr__(self):
         return f"{{id : {self.name}, status : TODO}}"
+
+    def get_failures(self):
+        return [t.get_failures() for t in self.Tasks]
 
 class Run():
     def __test_db_to_objects(self):
@@ -176,6 +204,13 @@ class Run():
     @property
     def success(self):
         return all([test.success for test in self.Tests.values()])
+
+    def get_running_tests(self):
+        return [k for k,v in self.Tests.items() if not v.completed]
+
+    def get_failures(self):
+        return {test_id : test.get_failures() for test_id, test in self.Tests.items()}
+
 
 class TaskFailure():
     def __init__(self):
