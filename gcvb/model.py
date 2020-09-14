@@ -176,3 +176,45 @@ class Run():
     @property
     def success(self):
         return all([test.success for test in self.Tests.values()])
+
+class TaskFailure():
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        pass
+
+    def __str__(self):
+        pass
+
+class ExitFailure(TaskFailure):
+    def __init__(self, return_code):
+        self.return_code = return_code
+
+    def __repr__(self):
+        return f"<Exit Failure (return code : {self.return_code})>"
+
+    def __str__(self):
+        return self.__repr__()
+
+class MissingMetric(TaskFailure):
+    def __init__(self, metric_id):
+        self.metric_id = metric_id
+
+    def __repr__(self):
+        return f"<Missing Metric ({self.metric_id})>"
+
+    def __str__(self):
+        return self.__repr__()
+
+class OutOfTolerance(TaskFailure):
+    def __init__(self, metric_id, metric, recorded):
+        self.metric_id = metric_id
+        self.metric = metric
+        self.recorded = recorded
+
+    def __repr__(self):
+        return f"<OutOfTolerance (metric : {self.metric_id})"
+
+    def __str__(self):
+        return self.__repr__()
