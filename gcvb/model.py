@@ -63,7 +63,7 @@ class Validation:
     def get_missing_metrics(self):
         e_m = set(self.expected_metrics.keys())
         r_m = set(self.recorded_metrics.keys())
-        return e_m.difference(e_m.intersection(r_m))
+        return e_m.difference(r_m)
 
     def get_out_of_tolerance_metrics(self):
         res = []
@@ -75,7 +75,7 @@ class Validation:
 
     @property
     def missing_metrics(self):
-        return bool(not(self.get_missing_metrics()))
+        return bool(self.get_missing_metrics())
 
     @property
     def success(self):
