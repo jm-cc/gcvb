@@ -26,7 +26,10 @@ def load_yaml(yaml_file, modifier=None):
     Keyword arguments:
     yaml_file -- name of the file to load
     """
-    original=util.open_yaml(yaml_file)
+    hash = util.hash_file(yaml_file)
+    original = db.load_yaml_cache(hash)
+    if original is None:
+        original = db.save_yaml_cache(yaml_file)
 
     res={}
     default_values=original.get("default_values",{})
