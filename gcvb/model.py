@@ -218,7 +218,7 @@ class Run():
         return [k for k,v in self.Tests.items() if not v.completed]
 
     def get_failures(self):
-        return {test_id : test.get_failures() for test_id, test in self.Tests.items()}
+        return {test_id : test.get_failures() for test_id, test in self.Tests.items() if any(test.get_failures())}
 
 
 class TaskFailure():
