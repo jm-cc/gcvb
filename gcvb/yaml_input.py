@@ -20,17 +20,7 @@ def set_default_value(default_dict,target_dict):
         if k not in target_dict:
             target_dict[k]=v
 
-def load_yaml(yaml_file, modifier=None):
-    """Load a yaml file and generate the corresponding gcvb dictionary
-
-    Keyword arguments:
-    yaml_file -- name of the file to load
-    """
-    hash = util.hash_file(yaml_file)
-    original = db.load_yaml_cache(hash)
-    if original is None:
-        original = db.save_yaml_cache(yaml_file)
-
+def convert_yaml_to_gcvb_dict(original):
     res={}
     default_values=original.get("default_values",{})
     #res["default_values"]=default_values
@@ -79,6 +69,20 @@ def load_yaml(yaml_file, modifier=None):
             else:
                 current_test=copy.deepcopy(test)
                 current_pack["Tests"].append(current_test)
+    return res
+
+def load_yaml(yaml_file, modifier=None):
+    """Load a yaml file and generate the corresponding gcvb dictionary
+
+    Keyword arguments:
+    yaml_file -- name of the file to load
+    """
+    hash = util.hash_file(yaml_file)
+    original = db.load_yaml_cache(hash)
+    if original is None:
+        original = db.save_yaml_cache(yaml_file)
+
+    res = convert_yaml_to_gcvb_dict(original)
 
     if (modifier):
         mod=importlib.import_module(modifier)
