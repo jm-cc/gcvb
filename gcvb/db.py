@@ -48,10 +48,10 @@ CREATE TABLE files(id       INTEGER PRIMARY KEY,
                    filename TEXT,
                    file     BLOB,
                    test_id  INTEGER,
-                   FOREIGN KEY(test_id) REFERENCES test(id))
+                   FOREIGN KEY(test_id) REFERENCES test(id));
 
 CREATE TABLE yaml_cache(hash TEXT PRIMARY KEY,
-                        pickle BLOB)
+                        pickle BLOB);
 """
 
 #GLOBAL
