@@ -78,11 +78,11 @@ def load_yaml(yaml_file, modifier=None):
     yaml_file -- name of the file to load
     """
     hash = util.hash_file(yaml_file)
-    original = db.load_yaml_cache(hash)
-    if original is None:
-        original = db.save_yaml_cache(yaml_file)
-
-    res = convert_yaml_to_gcvb_dict(original)
+    res = db.load_yaml_cache(hash)
+    if res is None:
+        original = util.open_yaml(yaml_file)
+        res = convert_yaml_to_gcvb_dict(original)
+        db.save_yaml_cache(hash, res)
 
     if (modifier):
         mod=importlib.import_module(modifier)
