@@ -49,6 +49,9 @@ CREATE TABLE files(id       INTEGER PRIMARY KEY,
                    file     BLOB,
                    test_id  INTEGER,
                    FOREIGN KEY(test_id) REFERENCES test(id))
+
+CREATE TABLE yaml_cache(hash TEXT PRIMARY KEY,
+                        pickle BLOB)
 """
 
 #GLOBAL
@@ -230,6 +233,22 @@ def save_files(cursor, run_id, test_id, file_list):
         for file in glob.iglob(pattern):
             content=util.file_to_compressed_binary(file)
             cursor.execute(request,[file,content,test_id])
+
+@with_connection
+def save_yaml_cache(cursor, yaml_file):
+    request = """INSERT INTO yaml_cache(hash, pickle) VALUES (?,?)"""
+    hash = util.hash_file(yaml_file)
+    res_dict = util.open_yaml(yaml_file)
+    loaded_dict = util.pickle_obj_to_binary(res_dict)
+    cursor.execute(request, [hash, loaded_dict])
+    return res_dict
+
+@with_connection
+def load_yaml_cache(cursor, hash):
+    request = """SELECT pickle FROM yaml_cache WHERE hash=(?)"""
+    cursor.execute(request,  [hash])
+    res = cursor.fetchone()
+    return util.pickle_binary_to_obj(res["pickle"]) if res else None
 
 @with_connection
 def get_tests(cursor, run_id):

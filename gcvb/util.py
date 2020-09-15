@@ -6,6 +6,28 @@ except ImportError:
     from yaml import Loader, Dumper
 import gzip
 import shutil
+import io
+import hashlib
+import pickle
+
+def hash_file(filename):
+    with open(filename,"rb") as f:
+        b = f.read() # read entire file as bytes
+        readable_hash = hashlib.sha256(b).hexdigest()
+        return readable_hash
+
+def pickle_obj_to_binary(obj):
+    """ return bytes from a python object"""
+    with io.BytesIO() as f:
+        pickle.dump(obj, f)
+        f.seek(0)
+        return f.read()
+
+def pickle_binary_to_obj(binary):
+    with io.BytesIO(binary) as f:
+        return pickle.load(f)
+
+
 
 def open_yaml(filename):
     with open(filename,'r') as stream:
