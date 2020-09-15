@@ -135,11 +135,10 @@ def main():
         #currently db is a special command that is supposed to be invoked only internaly by gcvb.
         get_to_gcvb_root()
 
-    if args.command in ["list","generate"]:
-        a=yaml_input.load_yaml(args.yaml_file, args.modifier)
-        a=filter_tests(args,a)
     #Commands
     if args.command=="list":
+        a=yaml_input.load_yaml(args.yaml_file, args.modifier)
+        a=filter_tests(args,a)
         if not(args.count):
             if (args.human_readable):
               r = list_human_readable(a["Packs"])
@@ -155,6 +154,10 @@ def main():
 
         if not(os.path.isfile(db.database)):
             db.create_db()
+
+        a=yaml_input.load_yaml(args.yaml_file, args.modifier)
+        a=filter_tests(args,a)
+
         gcvb_id=db.new_gcvb_instance(' '.join(sys.argv[1:]),args.yaml_file,args.modifier)
         target_dir="./results/{}".format(str(gcvb_id))
         a["data_root"]=data_root
