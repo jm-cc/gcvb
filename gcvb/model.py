@@ -163,6 +163,11 @@ class Test():
     def success(self):
         return all([t.success for t in self.Tasks])
 
+    @property
+    def failed(self):
+        #failed if a completed task failed.
+        return any([bool(t.get_failures()) for t in self.Tasks if t.completed])
+
     def __repr__(self):
         return f"{{id : {self.name}, status : TODO}}"
 
@@ -204,6 +209,10 @@ class Run():
     @property
     def success(self):
         return all([test.success for test in self.Tests.values()])
+
+    @property
+    def failed(self):
+        return any([test.failed for test in self.Tests.values()])
 
     def get_running_tests(self):
         return [k for k,v in self.Tests.items() if not v.completed]

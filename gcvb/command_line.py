@@ -239,7 +239,7 @@ def main():
             print(f"{rl} are still running. (Completed : {tt-rl}/{tt})")
         if run.success:
             print("Success!")
-        if run.get_failures():
+        if run.failed:
             print(f"Failure : {len(run.get_failures())} failed.")
             print()
             print("Details of failures :")
