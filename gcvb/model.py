@@ -177,11 +177,11 @@ class Run():
         self.Tests = {t["name"] : Test(b[t["name"]], self.config, t["name"], t["start_date"], t["end_date"]) for t in self.db_tests}
         # Fill infos for every step
         recorded_metrics = db.load_report_n(self.run_id)
-        step_info = db.get_steps(self.run_id)
+        steps = db.get_steps(self.run_id)
         for test_id, test in self.Tests.items():
             for step, metrics in recorded_metrics[test_id].items():
                 test.Steps[step-1].recorded_metrics = metrics
-            for step, step_info in step_info[test_id].items():
+            for step, step_info in steps[test_id].items():
                 test.Steps[step-1].start_date = step_info["start_date"]
                 test.Steps[step-1].end_date = step_info["end_date"]
                 test.Steps[step-1].status = step_info["status"]
