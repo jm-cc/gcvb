@@ -235,10 +235,8 @@ def save_files(cursor, run_id, test_id, file_list):
             cursor.execute(request,[file,content,test_id])
 
 @with_connection
-def save_yaml_cache(cursor, yaml_file):
+def save_yaml_cache(cursor, hash, res_dict):
     request = """INSERT INTO yaml_cache(hash, pickle) VALUES (?,?)"""
-    hash = util.hash_file(yaml_file)
-    res_dict = util.open_yaml(yaml_file)
     loaded_dict = util.pickle_obj_to_binary(res_dict)
     cursor.execute(request, [hash, loaded_dict])
     return res_dict
