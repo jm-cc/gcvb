@@ -135,6 +135,9 @@ def main():
         #currently db is a special command that is supposed to be invoked only internaly by gcvb.
         get_to_gcvb_root()
 
+    if not(os.path.isfile(db.database)):
+        db.create_db()
+
     #Commands
     if args.command=="list":
         a=yaml_input.load_yaml(args.yaml_file, args.modifier)
@@ -151,9 +154,6 @@ def main():
         data_root=os.path.join(os.getcwd(),"data")
         if (args.data_root):
             data_root=os.path.abspath(args.data_root)
-
-        if not(os.path.isfile(db.database)):
-            db.create_db()
 
         a=yaml_input.load_yaml(args.yaml_file, args.modifier)
         a=filter_tests(args,a)
