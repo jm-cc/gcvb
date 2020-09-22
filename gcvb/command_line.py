@@ -262,5 +262,8 @@ def main():
         from . import dashboard
         dashboard.run_server()
 
-if __name__ == '__main__':
-    main()
+def profiled_main():
+    import cProfile
+    p = cProfile.Profile()
+    p.runcall(main)
+    p.print_stats(sort="cumtime")

@@ -21,6 +21,7 @@ setuptools.setup(
     ],
     install_requires=["PyYAML"],
     entry_points = {
-        'console_scripts' : ['gcvb=gcvb.command_line:main']
+        'console_scripts' : ['gcvb=gcvb.command_line:main',
+                             'gcvb-profiled=gcvb.command_line:profiled_main']
     }
 )
