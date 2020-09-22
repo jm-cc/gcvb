@@ -94,7 +94,7 @@ class Task():
     def __init__(self, task_dict, config):
         self.raw_dict = task_dict
         self.status = JobStatus.unlinked
-        self.exectuable = task_dict["executable"]
+        self.executable = task_dict["executable"]
         self.options = task_dict.get("options", '')
         self.launch_command = task_dict["launch_command"]
         self.nprocs = task_dict["nprocs"]
@@ -125,7 +125,7 @@ class Task():
         res = []
         if self.completed:
             if self.status > JobStatus.exit_success:
-                res.append(ExitFailure(self.status))
+                res.append(ExitFailure(self.executable, self.status))
             # Missing metric is a failure only if the task is completed
             for v in self.Validations:
                 missing = v.get_missing_metrics()
@@ -232,7 +232,8 @@ class TaskFailure():
         pass
 
 class ExitFailure(TaskFailure):
-    def __init__(self, return_code):
+    def __init__(self, executable, return_code):
+        self.executable = executable
         self.return_code = return_code
 
     def __repr__(self):
