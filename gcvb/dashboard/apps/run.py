@@ -1,11 +1,11 @@
 import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-import gcvb.validation as val
 import gcvb.db as db
 import gcvb.yaml_input as yaml_input
 import os
 from gcvb.loader import loader as loader
+import gcvb.model as model
 
 if __name__ == '__main__':
     from app import app
@@ -14,14 +14,13 @@ else:
 from dash.dependencies import Input, Output
 
 # Data
-def data_preparation(report, ya):
+def data_preparation(run_id):
+    run = model.Run(run_id)
     res={"id" : [], "description" : [], "result" : []}
-    for test_id,test in sorted(report.validation_base.items()):
-        if test_id not in report.status:
-            continue
+    for test_id,test in run.Tests.items():
         res["id"].append(test_id)
-        res["description"].append(ya["Tests"][test_id].get("description")) # to be changed
-        res["result"].append(report.status[test_id])
+        res["description"].append(test.raw_dict.get("description", ""))
+        res["result"].append(test.hr_result())
     return res
 
 # View
@@ -46,10 +45,8 @@ def Table(report, run_id, columns=None):
 #Page Generator
 def gen_page(run_id, gcvb_id):
     computation_dir="./results/{}".format(str(gcvb_id))
-    a = loader.load_base(run_id)
-    r=db.load_report(run_id)
-    report = val.Report(a,r)
-    data = data_preparation(report, a)
+    run_id,gcvb_id=db.get_last_run()
+    data = data_preparation(run_id)
     layout = dbc.Container([html.H1("Run"),Table(data,run_id,["id","description","result"])])
     return layout
 
