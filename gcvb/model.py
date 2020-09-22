@@ -137,6 +137,13 @@ class Task():
                 res.append(OutOfTolerance(m_id,m,v))
         return res
 
+    def hr_result(self):
+        # returns a string representing the first failure
+        f = self.get_failures()
+        if f:
+            return f[0].hr_result()
+        return "Success"
+
 class Test():
     def __init__(self, test_dict, config, name=None, start_date=None, end_date=None):
         self.raw_dict = test_dict
@@ -173,6 +180,15 @@ class Test():
 
     def get_failures(self):
         return [t.get_failures() for t in self.Tasks]
+
+    def hr_result(self):
+        if not(self.completed):
+            return "Not completed yet"
+        failures = self.get_failures()
+        for k,f in enumerate(failures, 1):
+            if f:
+                return f"Step {k} : {f[0].hr_result()}"
+        return "Success"
 
 class Run():
     def __test_db_to_objects(self):
@@ -242,6 +258,10 @@ class ExitFailure(TaskFailure):
     def __str__(self):
         return self.__repr__()
 
+    def hr_result(self):
+        return f"{self.executable} exited with code {self.return_code}/"
+
+
 class MissingMetric(TaskFailure):
     def __init__(self, metric_id):
         self.metric_id = metric_id
@@ -251,6 +271,9 @@ class MissingMetric(TaskFailure):
 
     def __str__(self):
         return self.__repr__()
+
+    def hr_result(self):
+        return f"Metric {self.metric_id} is missing."
 
 class OutOfTolerance(TaskFailure):
     def __init__(self, metric_id, metric, recorded):
@@ -263,3 +286,8 @@ class OutOfTolerance(TaskFailure):
 
     def __str__(self):
         return self.__repr__()
+
+    def hr_result(self):
+        target = self.metric.reference #FIXME
+        value = self.recorded #FIXME
+        return f"{self.metric.type.capitalize()} metric {self.metric_id} is out of tolerance. (target : {target}, value : {value})"
