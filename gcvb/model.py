@@ -15,16 +15,20 @@ class AbsoluteMetric:
         self.reference = reference
         self.tolerance = tolerance
         self.unit = unit
+    def distance(self, value):
+        return abs(value - self.reference)
     def within_tolerance(self, value):
-        return abs(value - self.reference) <= self.tolerance
+        return self.distance(value) <= self.tolerance
 
 class RelativeMetric:
     def __init__(self, reference, tolerance):
         self.type = "relative"
         self.reference = reference
         self.tolerance = tolerance
+    def distance(self, value):
+        return (abs(value - self.reference) / self.reference)
     def within_tolerance(self, value):
-        return (abs(value - self.reference) / self.reference) <= self.tolerance
+        return self.distance(value) <= self.tolerance
 
 class Validation:
     default_type = "relative"
