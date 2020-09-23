@@ -10,7 +10,6 @@ from . import template
 from . import job
 from . import util
 from . import db
-from . import validation
 from . import snippet
 from . import generate_refs
 from . import jobrunner
