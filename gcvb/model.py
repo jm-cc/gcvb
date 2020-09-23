@@ -69,6 +69,11 @@ class Validation:
         r_m = set(self.recorded_metrics.keys())
         return e_m.difference(r_m)
 
+    def get_untracked_metrics(self):
+        e_m = set(self.expected_metrics.keys())
+        r_m = set(self.recorded_metrics.keys())
+        return {m : self.recorded_metrics[m] for m in r_m.difference(e_m)}
+
     def get_out_of_tolerance_metrics(self):
         res = []
         for k,v in self.recorded_metrics.items():
