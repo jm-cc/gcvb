@@ -62,7 +62,7 @@ def set_db(db_path):
     database=db_path
 
 def connect(file,f, *args, **kwargs):
-    conn=sqlite3.connect(file, timeout=5)
+    conn=sqlite3.connect(file, timeout=50)
     conn.row_factory=sqlite3.Row
     c=conn.cursor()
     try:
@@ -79,7 +79,7 @@ def connect(file,f, *args, **kwargs):
 def get_exclusive_access():
     """Returns a sqlite3.Connection with exclusive access to the db.
        Must be closed afterwards"""
-    conn=sqlite3.connect(database, timeout=20)
+    conn=sqlite3.connect(database, timeout=50)
     conn.row_factory=sqlite3.Row
     conn.isolation_level = 'EXCLUSIVE'
     conn.execute('BEGIN EXCLUSIVE')
