@@ -1,7 +1,6 @@
 import dash
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-import gcvb.validation as val
 import gcvb.db as db
 import gcvb.job as job
 import gcvb.yaml_input as yaml_input
@@ -12,22 +11,20 @@ else:
     from ..app import app
 from dash.dependencies import Input, Output
 from gcvb.loader import loader as loader
+import gcvb.model as model
 
 #Data
 def data_preparation(run, test_id):
-    run_summary=db.retrieve_test(run,test_id)
-    base = loader.load_base(run)
-
-    test = base["Tests"][test_id]
+    test = run.Tests[test_id]
 
     data = {}
-    data["base_id"] = db.get_base_from_run(run)
+    data["base_id"] = run.base_id
     data["Tasks"] = []
     data["test_id"] = test_id
-    data["description"] = test.get("description","")
-    data["status"] = "success"
+    data["description"] = test.raw_dict.get("description","")
 
-    for i,task in enumerate(test["Tasks"]):
+    for i,task_obj in enumerate(test.Tasks):
+        task = task_obj.raw_dict #FIXME quickway to have old behaviour
         ajc = {}
         job.fill_at_job_creation_task(ajc, task, f"{test_id}_{i}", loader.config)
         d = {}
@@ -38,33 +35,31 @@ def data_preparation(run, test_id):
         d["from_results"] = [{"id" : f["id"],
                               "file" : job.format_launch_command(f["file"], loader.config, ajc)}
                              for f in task.get("serve_from_results",[])]
-        for validation in task.get("Validations",[]):
-            job.fill_at_job_creation_validation(ajc, validation,
-                                                loader.data_root,  test["data"],
+        for validation in task_obj.Validations:
+            job.fill_at_job_creation_validation(ajc, validation.raw_dict,
+                                                loader.data_root,  test.raw_dict["data"],
                                                 loader.config, loader.references)
-            for metric in validation.get("Metrics",[]):
+            for metric_id, metric in validation.expected_metrics.items():
                 v = {}
                 d["metrics"].append(v)
-                v["id"]=metric["id"]
-                v["type"]=metric.get("type","absolute" if validation["type"]=="file_comparison" else "relative")
-                v["tolerance"]=metric["tolerance"]
-                if v["type"] == "absolute":
-                    v["distance"]=run_summary["metrics"].get(v["id"],"N/A")
+                v["id"]=metric_id
+                v["type"]=metric.type
+                v["tolerance"]=metric.tolerance
+                if metric_id in validation.recorded_metrics:
+                    v["distance"] = metric.distance(validation.recorded_metrics[v["id"]])
                 else:
-                    if v["id"] in run_summary["metrics"]:
-                        if isinstance(metric["reference"], dict):
-                            v["distance"] = "N/A" # no support for configuration dependent metric yet
-                        else:
-                            v["distance"] = abs(float(run_summary["metrics"][v["id"]]) - float(metric["reference"])) / float(metric["reference"])
-                    else:
-                        v["distance"] = "N/A"
-                if v["distance"]=="N/A":
-                    data["status"]="failure"
-                elif float(v["distance"])>float(v["tolerance"]):
-                    data["status"]="failure"
+                    v["distance"] = "N/A (Missing metric)"
                 v["from_results"] = [{"id" : f["id"],
                                       "file" : job.format_launch_command(f["file"], loader.config, ajc)}
-                                     for f in validation.get("serve_from_results",[])]
+                                     for f in validation.raw_dict.get("serve_from_results",[])]
+            for metric_id, recorded_value in validation.get_untracked_metrics().items():
+                m = {}
+                d["metrics"].append(m)
+                m["id"] = metric_id
+                m["type"] = "untracked"
+                m["tolerance"] = "Untracked"
+                m["distance"] = recorded_value
+                m["from_results"]=[]
     return data
 
 #Content
@@ -97,8 +92,10 @@ def metric_table(data, list_of_metrics):
         row.append(cell)
 
         style=""
-        if (m["distance"]=="N/A"):
+        if (m["distance"]=="N/A (Missing metric)"):
             style="table-warning"
+        elif(m["tolerance"]=="Untracked"):
+            style="table-info"
         elif (float(m["distance"])>float(m["tolerance"])):
             style="table-danger"
 
@@ -123,21 +120,23 @@ def details_panel(data):
             el_list.append(metric_table(data, t["metrics"]))
     return html.Div([html.H5("Details"),*el_list])
 
+def status_to_badge(run):
+    if run.failed:
+        return html.Span("Failure",className="badge badge-danger")
+    if not(run.completed):
+        return html.Span("In progress",className="badge badge-info")
+    if run.success:
+        return html.Span("Success",className="badge badge-success")
+    raise ValueError("Unexpected")
+
 #Page Generator
 def gen_page(run_id, test_id):
-    run_summary=db.retrieve_test(run_id,test_id)
-    base = loader.load_base(run_id)
-    r=db.load_report(run_id)
-    report=val.Report(base,r)
-    #return dbc.Container(metric_table(report.success[test_id]))
-    #return dbc.Container(str((run_summary,base["Tests"][test_id])))
-
-    data=data_preparation(run_id,test_id)
+    run = model.Run(run_id)
+    data=data_preparation(run,test_id)
 
     #Title + Badge
-    status_str=html.Span("Success",className="badge badge-success")
-    if data["status"]!="success":
-        status_str=html.Span("Failure",className="badge badge-danger")
+    status_str=status_to_badge(run)
+
     title=html.H1([data["test_id"]+" ",status_str])
     res=dbc.Container([title,summary_panel(data),details_panel(data)])
     return res
