@@ -14,6 +14,7 @@ from . import snippet
 from . import generate_refs
 from . import jobrunner
 from . import model
+from . import report
 
 def parse():
     parser = argparse.ArgumentParser(description="(G)enerate (C)ompute (V)alidate (B)enchmark",prog="gcvb")
@@ -77,6 +78,7 @@ def parse():
     parser_report.add_argument("--polling", action="store_true", help="poll report until finished or timeout expiration")
     parser_report.add_argument("-f","--frequency", help="time between each check", type=float, default=10)
     parser_report.add_argument("--timeout", help="time between each", type=float, default=300)
+    parser_report.add_argument("--html", action="store_true", help="display result in html format")
 
 
     args=parser.parse_args()
@@ -235,17 +237,11 @@ def main():
                 previous_completed_tests = len(completed_tests)
 
         run = model.Run(run_id)
-        rl = len(run.get_running_tests())
-        tt = len(run.Tests)
-        if not run.completed:
-            print(f"{rl} are still running. (Completed : {tt-rl}/{tt})")
-        if run.success:
-            print("Success!")
-        if run.failed:
-            print(f"Failure : {len(run.get_failures())} failed.")
-            print()
-            print("Details of failures :")
-            pprint.pprint(run.get_failures())
+        if (args.html):
+            print(report.html_report(run))
+        else:
+            print(report.str_report(run))
+
 
     if args.command == "snippet":
         snippet.display(args)
