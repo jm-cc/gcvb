@@ -246,6 +246,14 @@ class Run():
     def get_failures(self):
         return {test_id : test.get_failures() for test_id, test in self.Tests.items() if any(test.get_failures())}
 
+    def str_status(self):
+        if self.failed:
+            return "Failed"
+        if self.completed and self.success:
+            return "Success"
+        else:
+            return "In progress"
+
 
 class TaskFailure():
     def __init__(self):
