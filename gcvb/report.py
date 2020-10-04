@@ -20,7 +20,7 @@ def html_report(run):
         result.text = test.hr_result()
         result_table.append(line)
 
-    return ET.tostring(root)
+    return ET.tostring(root, encoding="unicode")
 
 def str_report(run):
     rl = len(run.get_running_tests())
