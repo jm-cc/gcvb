@@ -56,7 +56,14 @@ def parse():
     parser_compute.add_argument("--chain", action="store_true", help="stricter dependencies between tasks and validation")
     group = parser_compute.add_mutually_exclusive_group()
     group.add_argument("--dry-run", action="store_true", help="do not launch the job.")
-    group.add_argument("--with-jobrunner", metavar="num_cores", type=int, help="use a jobrunner instead of one submitted job with <num_cores>", default=None)
+    group.add_argument(
+        "--with-jobrunner",
+        "-j",
+        metavar="num_cores",
+        type=int,
+        help="use a jobrunner instead of one submitted job with <num_cores>",
+        default=None,
+    )
     parser_compute.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority (--with-jobrunner required)")
     parser_compute.add_argument("--verbose", action="store_true", help="display informations (--with-jobrunner required)")
     parser_compute.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner (--with-jobrunner required)", default=0)
