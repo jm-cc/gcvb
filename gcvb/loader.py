@@ -24,7 +24,9 @@ class BaseLoader(object):
         return self.loaded[(ya,mod)]
 
     def __populate_one_allowed(self, taskorval, allowedentry, at_job_creation):
-        for f in taskorval.get("serve_from_results",[]):
+        lr = taskorval.get("serve_from_results",[])
+        ldb = taskorval.get("serve_from_db",[])
+        for f in lr + ldb:
             filename = job.format_launch_command(f["file"], self.config, at_job_creation)
             allowedentry[filename] = f
 

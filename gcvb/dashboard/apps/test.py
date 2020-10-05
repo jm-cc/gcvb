@@ -42,6 +42,7 @@ def data_preparation(run, test_id):
         d["options"] = task["options"]
         d["metrics"] = []
         _fill_files(d, task, ajc, "from_results")
+        _fill_files(d, task, ajc, "from_db")
         for validation in task_obj.Validations:
             job.fill_at_job_creation_validation(ajc, validation.raw_dict,
                                                 loader.data_root,  test.raw_dict["data"],
@@ -57,6 +58,7 @@ def data_preparation(run, test_id):
                 else:
                     v["distance"] = "N/A (Missing metric)"
                 _fill_files(v, validation.raw_dict, ajc, "from_results")
+                _fill_files(v, validation.raw_dict, ajc, "from_db")
             for metric_id, recorded_value in validation.get_untracked_metrics().items():
                 m = {}
                 d["metrics"].append(m)
@@ -71,13 +73,15 @@ def data_preparation(run, test_id):
 def _metrics_file_links(m, data):
     test_id = data["test_id"]
     l = []
-    for f in m["from_results"]:
-        l.append(
-            html.A(
-                href=f"/files/{data['base_id']}/{test_id}/{f['file']}", children=f["id"]
+    for t, url in [("from_results", "files"), ("from_db", "dbfiles")]:
+        for f in m[t]:
+            l.append(
+                html.A(
+                    href=f"/{url}/{data['base_id']}/{test_id}/{f['file']}",
+                    children=f["id"],
+                )
             )
-        )
-        l.append(", ")
+            l.append(", ")
     return [" ("] + l[:-1] + [")"] if l else l
 
 
@@ -118,12 +122,7 @@ def details_panel(data):
     el_list = []
     for c,t in enumerate(data["Tasks"], 1):
         el_list.append(html.H6("{!s} - {} {}".format(c,t["executable"],t["options"])))
-        if t["from_results"]:
-            l = ["Files :"]
-            for f in t["from_results"]:
-                l.append(" ")
-                l.append(html.A(href=f"/files/{data['base_id']}/{data['test_id']}/{f['file']}", children=f["id"]))
-            el_list.append(html.Span(l))
+        el_list.append(html.Span(_metrics_file_links(t, data)))
         if t["metrics"]:
             el_list.append(metric_table(data, t["metrics"]))
     return html.Div([html.H5("Details"),*el_list])
