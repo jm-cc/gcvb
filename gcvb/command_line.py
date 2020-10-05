@@ -243,7 +243,6 @@ def main():
     if args.command=="report":
         run_id,gcvb_id=db.get_last_run()
         computation_dir="./results/{}".format(str(gcvb_id))
-        a=yaml_input.load_yaml_from_run(run_id)
 
         #Is the run finished ?
         started_at=time.time()
