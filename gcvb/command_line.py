@@ -5,6 +5,7 @@ import os
 import sys
 import pprint
 import time
+import platform
 from . import yaml_input
 from . import template
 from . import job
@@ -108,13 +109,21 @@ def filter_tests(args,data):
     return data
 
 def get_to_gcvb_root():
-    while not(os.path.isfile("config.yaml")):
-        current_path=os.getcwd()
-        os.chdir("..")
-        if (os.getcwd()==current_path):
-            print("You are not inside a gcvb instance. The config.yaml was not found in a parent directory.")
-            sys.exit()
-    sys.path.append(os.getcwd())
+    cwd = os.getcwd()
+    d = cwd
+    while not os.path.isfile(os.path.join(d, "config.yaml")):
+        nd = os.path.dirname(d)
+        if nd == d:
+            print("Warning: config.yaml was not found in a parent directory."
+                " Using current folder as gcvb instance root.")
+            d = cwd
+            break
+        else:
+            d = nd
+    # FIXME: remove this chdir and return the root folder. chdir is bad
+    # if we want gcvb to be used as a library. It's too global.
+    os.chdir(d)
+    sys.path.append(d)
 
 def report_check_terminaison(run_id):
     tests=db.get_tests(run_id)
@@ -166,7 +175,14 @@ def main():
 
     if args.command=="compute":
         gcvb_id=args.gcvb_base
-        config=util.open_yaml("config.yaml")
+        if os.path.exists("config.yaml"):
+            config = util.open_yaml("config.yaml")
+        else:
+            config = {
+                "machine_id": platform.node(),
+                "executables": {},
+                "submit_command": "sh",
+            }
         config_id=config.get("machine_id")
         if not(gcvb_id):
             gcvb_id=db.get_last_gcvb()
