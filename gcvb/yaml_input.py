@@ -78,11 +78,14 @@ def load_yaml(yaml_file, modifier=None):
     yaml_file -- name of the file to load
     """
     dbmtime, res = db.load_yaml_cache()
-    mtime = os.path.getmtime(yaml_file)
+    fe = os.path.exists(yaml_file)
+    mtime = os.path.getmtime(yaml_file) if fe else 0
     if dbmtime < mtime:
         original = util.open_yaml(yaml_file)
         res = convert_yaml_to_gcvb_dict(original)
         db.save_yaml_cache(mtime, res)
+    if not fe:
+        print("Warning: {} not found, using cache.".format(yaml_file))
 
     if (modifier):
         mod=importlib.import_module(modifier)
