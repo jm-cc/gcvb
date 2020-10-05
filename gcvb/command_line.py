@@ -65,7 +65,7 @@ def parse():
         default=None,
     )
     parser_compute.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority (--with-jobrunner required)")
-    parser_compute.add_argument("--verbose", action="store_true", help="display informations (--with-jobrunner required)")
+    parser_compute.add_argument("--quiet", action="store_true", help="Show jobrunner execution log")
     parser_compute.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner (--with-jobrunner required)", default=0)
 
     parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run","start_task","end_task"])
@@ -80,7 +80,7 @@ def parse():
 
     parser_jobrunner.add_argument("num_cores", metavar="num_cores", type=int, help="number of cores to be used")
     parser_jobrunner.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority")
-    parser_jobrunner.add_argument("--verbose", action="store_true", help="display informations")
+    parser_jobrunner.add_argument("--quiet", action="store_true", help="Show execution log")
     parser_jobrunner.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner", default=0)
 
     parser_report.add_argument("--polling", action="store_true", help="poll report until finished or timeout expiration")
@@ -206,14 +206,14 @@ def main():
         if not(args.dry_run) and not(args.with_jobrunner):
             job.launch(job_file,config)
         if (args.with_jobrunner):
-            j=jobrunner.JobRunner(args.with_jobrunner, run_id, config, args.started_first, args.max_concurrent, args.verbose)
+            j=jobrunner.JobRunner(args.with_jobrunner, run_id, config, args.started_first, args.max_concurrent, not args.quiet)
             j.run()
 
     if args.command=="jobrunner":
         run_id,gcvb_id=db.get_last_run() #run chosen should be modifiable
         config=util.open_yaml("config.yaml")
         num_cores=args.num_cores
-        j=jobrunner.JobRunner(num_cores, run_id, config, args.started_first, args.max_concurrent, args.verbose)
+        j=jobrunner.JobRunner(num_cores, run_id, config, args.started_first, args.max_concurrent, not args.quiet)
         j.run()
 
 
