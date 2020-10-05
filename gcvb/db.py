@@ -265,7 +265,8 @@ def get_file_list(cursor, run_id, test_name):
     request="""SELECT filename
                FROM files
                INNER JOIN test ON test_id=test.id
-               WHERE run_id = ? AND test.name = ?"""
+               INNER JOIN run ON test.run_id=run.id
+               WHERE run.gcvb_id = ? AND test.name = ?"""
     cursor.execute(request,[run_id,test_name])
     res=cursor.fetchall()
     return [f["filename"] for f in res]
@@ -275,7 +276,8 @@ def retrieve_file(cursor, run_id, test_name, filename):
     request="""SELECT file
                FROM files
                INNER JOIN test ON test_id=test.id
-               WHERE run_id = ? AND test.name = ? AND filename = ?"""
+               INNER JOIN run ON test.run_id=run.id
+               WHERE run.gcvb_id = ? AND test.name = ? AND filename = ?"""
     cursor.execute(request, [run_id,test_name, filename])
     return gzip.decompress(cursor.fetchone()["file"])
 
