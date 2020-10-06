@@ -63,8 +63,8 @@ def display_page(pathname):
     else:
         return 'Bonjour'
 
-def run_server():
-    app.run_server()
+def run_server(debug=False):
+    app.run_server(debug=debug)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
