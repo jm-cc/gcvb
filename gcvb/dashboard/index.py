@@ -3,6 +3,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import os
+import io
+import gcvb.db as db
 
 import gcvb.loader as loader
 if __name__ == '__main__':
@@ -34,17 +36,32 @@ content = html.Div(id="page-content")
 app.layout=html.Div([url, navbar, content])
 
 
-@app.server.route("/files/<base>/<test>/<file>")
-def serve_from_results(base,test,file):
-    base=int(base)
+def _get_mimetype(base, test, filename):
+    base = int(base)
     if base not in loader.loader.allowed_files:
         flask.abort(404)
     if test not in loader.loader.allowed_files[base]:
         flask.abort(404)
-    if file not in loader.loader.allowed_files[base][test]:
+    if filename not in loader.loader.allowed_files[base][test]:
         flask.abort(404)
-    mimetype = loader.loader.allowed_files[base][test][file].get("mimetype","text/plain")
-    return flask.send_file(f"{cwd}/results/{base}/{test}/{file}", mimetype=mimetype)
+    return loader.loader.allowed_files[base][test][filename].get(
+        "mimetype", "text/plain"
+    )
+
+
+@app.server.route("/files/<base>/<test>/<file>")
+def serve_from_results(base, test, file):
+    return flask.send_file(
+        f"{cwd}/results/{base}/{test}/{file}", mimetype=_get_mimetype(base, test, file)
+    )
+
+
+@app.server.route("/dbfiles/<base>/<test>/<filename>")
+def serve_from_db(base, test, filename):
+    return flask.send_file(
+        io.BytesIO(db.retrieve_file(int(base), test, filename)),
+        mimetype=_get_mimetype(base, test, filename)
+    )
 
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
@@ -63,8 +80,8 @@ def display_page(pathname):
     else:
         return 'Bonjour'
 
-def run_server():
-    app.run_server()
+def run_server(debug=False):
+    app.run_server(debug=debug)
 
 if __name__ == '__main__':
     app.run_server(debug=True)

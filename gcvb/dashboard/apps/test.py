@@ -13,6 +13,15 @@ from dash.dependencies import Input, Output
 from gcvb.loader import loader as loader
 import gcvb.model as model
 
+def _fill_files(d, taskorval, ajc, fromtype):
+    d[fromtype] = [
+        {
+            "id": f["id"],
+            "file": job.format_launch_command(f["file"], loader.config, ajc),
+        }
+        for f in taskorval.get("serve_" + fromtype, [])
+    ]
+
 #Data
 def data_preparation(run, test_id):
     test = run.Tests[test_id]
@@ -32,9 +41,8 @@ def data_preparation(run, test_id):
         d["executable"] = task["executable"]
         d["options"] = task["options"]
         d["metrics"] = []
-        d["from_results"] = [{"id" : f["id"],
-                              "file" : job.format_launch_command(f["file"], loader.config, ajc)}
-                             for f in task.get("serve_from_results",[])]
+        _fill_files(d, task, ajc, "from_results")
+        _fill_files(d, task, ajc, "from_db")
         for validation in task_obj.Validations:
             job.fill_at_job_creation_validation(ajc, validation.raw_dict,
                                                 loader.data_root,  test.raw_dict["data"],
@@ -48,10 +56,9 @@ def data_preparation(run, test_id):
                 if metric_id in validation.recorded_metrics:
                     v["distance"] = metric.distance(validation.recorded_metrics[v["id"]])
                 else:
-                    v["distance"] = "N/A (Missing metric)"
-                v["from_results"] = [{"id" : f["id"],
-                                      "file" : job.format_launch_command(f["file"], loader.config, ajc)}
-                                     for f in validation.raw_dict.get("serve_from_results",[])]
+                    v["distance"] = "N/A"
+                _fill_files(v, validation.raw_dict, ajc, "from_results")
+                _fill_files(v, validation.raw_dict, ajc, "from_db")
             for metric_id, recorded_value in validation.get_untracked_metrics().items():
                 m = {}
                 d["metrics"].append(m)
@@ -62,27 +69,33 @@ def data_preparation(run, test_id):
                 m["from_results"]=[]
     return data
 
+
+def _metrics_file_links(m, data):
+    test_id = data["test_id"]
+    l = []
+    for t, url in [("from_results", "files"), ("from_db", "dbfiles")]:
+        for f in m[t]:
+            l.append(
+                html.A(
+                    href=f"/{url}/{data['base_id']}/{test_id}/{f['file']}",
+                    children=f["id"],
+                )
+            )
+            l.append(", ")
+    return [" ("] + l[:-1] + [")"] if l else l
+
+
 #Content
 def metric_table(data, list_of_metrics):
     test_id = data["test_id"]
-
-    h=[("Metric","55%"),("Type","25%"),("Distance","8%"),("Target","8%"),("H","2%")]
-    header=html.Tr([html.Th(col, style={"width" : width}) for col,width in h])
+    header = html.Tr(
+        [html.Th("Metric", style={"width": "100%"})]
+        + [html.Th(col) for col in ["Type", "Distance", "Target", "H"]]
+    )
 
     rows = []
     for m in list_of_metrics:
-        row = []
-
-        if m["from_results"]:
-            l = []
-            for f in m["from_results"]:
-                l.append(html.A(href=f"/files/{data['base_id']}/{test_id}/{f['file']}", children=f["id"]))
-                l.append(", ")
-            cell = html.Td([m["id"]]+[" ("]+l[:-1]+[")"])
-        else:
-            cell = html.Td(m["id"])
-        row.append(cell)
-
+        row = [html.Td([m["id"]] + _metrics_file_links(m, data))]
         for col in ["type", "distance", "tolerance"]:
             cell = html.Td(m[col])
             row.append(cell)
@@ -92,7 +105,7 @@ def metric_table(data, list_of_metrics):
         row.append(cell)
 
         style=""
-        if (m["distance"]=="N/A (Missing metric)"):
+        if (m["distance"]=="N/A"):
             style="table-warning"
         elif(m["tolerance"]=="Untracked"):
             style="table-info"
@@ -110,12 +123,7 @@ def details_panel(data):
     el_list = []
     for c,t in enumerate(data["Tasks"], 1):
         el_list.append(html.H6("{!s} - {} {}".format(c,t["executable"],t["options"])))
-        if t["from_results"]:
-            l = ["Files :"]
-            for f in t["from_results"]:
-                l.append(" ")
-                l.append(html.A(href=f"/files/{data['base_id']}/{data['test_id']}/{f['file']}", children=f["id"]))
-            el_list.append(html.Span(l))
+        el_list.append(html.Span(_metrics_file_links(t, data)))
         if t["metrics"]:
             el_list.append(metric_table(data, t["metrics"]))
     return html.Div([html.H5("Details"),*el_list])

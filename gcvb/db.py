@@ -50,8 +50,7 @@ CREATE TABLE files(id       INTEGER PRIMARY KEY,
                    test_id  INTEGER,
                    FOREIGN KEY(test_id) REFERENCES test(id));
 
-CREATE TABLE yaml_cache(hash TEXT PRIMARY KEY,
-                        pickle BLOB);
+CREATE TABLE yaml_cache(mtime REAL, pickle BLOB);
 """
 
 #GLOBAL
@@ -235,18 +234,23 @@ def save_files(cursor, run_id, test_id, file_list):
             cursor.execute(request,[file,content,test_id])
 
 @with_connection
-def save_yaml_cache(cursor, hash, res_dict):
-    request = """INSERT INTO yaml_cache(hash, pickle) VALUES (?,?)"""
+def save_yaml_cache(cursor, mtime, res_dict):
+    req1 = "INSERT INTO yaml_cache(mtime, pickle) VALUES (?,?)"
+    req2 = "DELETE FROM yaml_cache WHERE mtime < (?)"
     loaded_dict = util.pickle_obj_to_binary(res_dict)
-    cursor.execute(request, [hash, loaded_dict])
+    cursor.execute(req1, (mtime, loaded_dict))
+    cursor.execute(req2, (mtime,))
     return res_dict
 
 @with_connection
-def load_yaml_cache(cursor, hash):
-    request = """SELECT pickle FROM yaml_cache WHERE hash=(?)"""
-    cursor.execute(request,  [hash])
+def load_yaml_cache(cursor):
+    request = "SELECT mtime, pickle FROM yaml_cache"
+    cursor.execute(request)
     res = cursor.fetchone()
-    return util.pickle_binary_to_obj(res["pickle"]) if res else None
+    if res is None:
+        return 0, None
+    else:
+        return res["mtime"], util.pickle_binary_to_obj(res["pickle"])
 
 @with_connection
 def get_tests(cursor, run_id):
@@ -261,7 +265,8 @@ def get_file_list(cursor, run_id, test_name):
     request="""SELECT filename
                FROM files
                INNER JOIN test ON test_id=test.id
-               WHERE run_id = ? AND test.name = ?"""
+               INNER JOIN run ON test.run_id=run.id
+               WHERE run.gcvb_id = ? AND test.name = ?"""
     cursor.execute(request,[run_id,test_name])
     res=cursor.fetchall()
     return [f["filename"] for f in res]
@@ -271,7 +276,8 @@ def retrieve_file(cursor, run_id, test_name, filename):
     request="""SELECT file
                FROM files
                INNER JOIN test ON test_id=test.id
-               WHERE run_id = ? AND test.name = ? AND filename = ?"""
+               INNER JOIN run ON test.run_id=run.id
+               WHERE run.gcvb_id = ? AND test.name = ? AND filename = ?"""
     cursor.execute(request, [run_id,test_name, filename])
     return gzip.decompress(cursor.fetchone()["file"])
 

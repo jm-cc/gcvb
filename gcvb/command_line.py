@@ -5,6 +5,7 @@ import os
 import sys
 import pprint
 import time
+import platform
 from . import yaml_input
 from . import template
 from . import job
@@ -36,6 +37,7 @@ def parse():
     parser_db = subparsers.add_parser('db', add_help=False)
     parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
     parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
+    parser_dashboard.add_argument("--debug", "-d", action="store_true", help="Run Flask in debug mode")
     parser_snippet = snippet.generate_parser(subparsers)
     parser_generate_refs = subparsers.add_parser('generate_refs', help="generate references from a base where a computation as already been executed.")
     parser_jobrunner = subparsers.add_parser("jobrunner", help="jobrunner to launch tests in parallel")
@@ -55,9 +57,16 @@ def parse():
     parser_compute.add_argument("--chain", action="store_true", help="stricter dependencies between tasks and validation")
     group = parser_compute.add_mutually_exclusive_group()
     group.add_argument("--dry-run", action="store_true", help="do not launch the job.")
-    group.add_argument("--with-jobrunner", metavar="num_cores", type=int, help="use a jobrunner instead of one submitted job with <num_cores>", default=None)
+    group.add_argument(
+        "--with-jobrunner",
+        "-j",
+        metavar="num_cores",
+        type=int,
+        help="use a jobrunner instead of one submitted job with <num_cores>",
+        default=None,
+    )
     parser_compute.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority (--with-jobrunner required)")
-    parser_compute.add_argument("--verbose", action="store_true", help="display informations (--with-jobrunner required)")
+    parser_compute.add_argument("--quiet", action="store_true", help="Show jobrunner execution log")
     parser_compute.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner (--with-jobrunner required)", default=0)
 
     parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run","start_task","end_task"])
@@ -72,7 +81,7 @@ def parse():
 
     parser_jobrunner.add_argument("num_cores", metavar="num_cores", type=int, help="number of cores to be used")
     parser_jobrunner.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority")
-    parser_jobrunner.add_argument("--verbose", action="store_true", help="display informations")
+    parser_jobrunner.add_argument("--quiet", action="store_true", help="Show execution log")
     parser_jobrunner.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner", default=0)
 
     parser_report.add_argument("--polling", action="store_true", help="poll report until finished or timeout expiration")
@@ -108,13 +117,21 @@ def filter_tests(args,data):
     return data
 
 def get_to_gcvb_root():
-    while not(os.path.isfile("config.yaml")):
-        current_path=os.getcwd()
-        os.chdir("..")
-        if (os.getcwd()==current_path):
-            print("You are not inside a gcvb instance. The config.yaml was not found in a parent directory.")
-            sys.exit()
-    sys.path.append(os.getcwd())
+    cwd = os.getcwd()
+    d = cwd
+    while not os.path.isfile(os.path.join(d, "config.yaml")):
+        nd = os.path.dirname(d)
+        if nd == d:
+            print("Warning: config.yaml was not found in a parent directory."
+                " Using current folder as gcvb instance root.")
+            d = cwd
+            break
+        else:
+            d = nd
+    # FIXME: remove this chdir and return the root folder. chdir is bad
+    # if we want gcvb to be used as a library. It's too global.
+    os.chdir(d)
+    sys.path.append(d)
 
 def report_check_terminaison(run_id):
     tests=db.get_tests(run_id)
@@ -166,7 +183,14 @@ def main():
 
     if args.command=="compute":
         gcvb_id=args.gcvb_base
-        config=util.open_yaml("config.yaml")
+        if os.path.exists("config.yaml"):
+            config = util.open_yaml("config.yaml")
+        else:
+            config = {
+                "machine_id": platform.node(),
+                "executables": {},
+                "submit_command": "sh",
+            }
         config_id=config.get("machine_id")
         if not(gcvb_id):
             gcvb_id=db.get_last_gcvb()
@@ -183,14 +207,14 @@ def main():
         if not(args.dry_run) and not(args.with_jobrunner):
             job.launch(job_file,config)
         if (args.with_jobrunner):
-            j=jobrunner.JobRunner(args.with_jobrunner, run_id, config, args.started_first, args.max_concurrent, args.verbose)
+            j=jobrunner.JobRunner(args.with_jobrunner, run_id, config, args.started_first, args.max_concurrent, not args.quiet)
             j.run()
 
     if args.command=="jobrunner":
         run_id,gcvb_id=db.get_last_run() #run chosen should be modifiable
         config=util.open_yaml("config.yaml")
         num_cores=args.num_cores
-        j=jobrunner.JobRunner(num_cores, run_id, config, args.started_first, args.max_concurrent, args.verbose)
+        j=jobrunner.JobRunner(num_cores, run_id, config, args.started_first, args.max_concurrent, not args.quiet)
         j.run()
 
 
@@ -220,7 +244,6 @@ def main():
     if args.command=="report":
         run_id,gcvb_id=db.get_last_run()
         computation_dir="./results/{}".format(str(gcvb_id))
-        a=yaml_input.load_yaml_from_run(run_id)
 
         #Is the run finished ?
         started_at=time.time()
@@ -255,7 +278,7 @@ def main():
 
     if args.command=="dashboard":
         from . import dashboard
-        dashboard.run_server()
+        dashboard.run_server(debug=args.debug)
 
 if __name__ == '__main__':
     main()
