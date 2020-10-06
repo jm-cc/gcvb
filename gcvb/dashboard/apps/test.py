@@ -56,7 +56,7 @@ def data_preparation(run, test_id):
                 if metric_id in validation.recorded_metrics:
                     v["distance"] = metric.distance(validation.recorded_metrics[v["id"]])
                 else:
-                    v["distance"] = "N/A (Missing metric)"
+                    v["distance"] = "N/A"
                 _fill_files(v, validation.raw_dict, ajc, "from_results")
                 _fill_files(v, validation.raw_dict, ajc, "from_db")
             for metric_id, recorded_value in validation.get_untracked_metrics().items():
@@ -104,7 +104,7 @@ def metric_table(data, list_of_metrics):
         row.append(cell)
 
         style=""
-        if (m["distance"]=="N/A (Missing metric)"):
+        if (m["distance"]=="N/A"):
             style="table-warning"
         elif(m["tolerance"]=="Untracked"):
             style="table-info"
