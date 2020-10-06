@@ -88,9 +88,10 @@ def _metrics_file_links(m, data):
 #Content
 def metric_table(data, list_of_metrics):
     test_id = data["test_id"]
-
-    h=[("Metric","55%"),("Type","25%"),("Distance","8%"),("Target","8%"),("H","2%")]
-    header=html.Tr([html.Th(col, style={"width" : width}) for col,width in h])
+    header = html.Tr(
+        [html.Th("Metric", style={"width": "100%"})]
+        + [html.Th(col) for col in ["Type", "Distance", "Target", "H"]]
+    )
 
     rows = []
     for m in list_of_metrics:
