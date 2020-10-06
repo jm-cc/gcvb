@@ -277,7 +277,7 @@ class ExitFailure(TaskFailure):
         return self.__repr__()
 
     def hr_result(self):
-        return f"{self.executable} exited with code {self.return_code}/"
+        return f"{self.executable} exited with code {self.return_code}"
 
 
 class MissingMetric(TaskFailure):
