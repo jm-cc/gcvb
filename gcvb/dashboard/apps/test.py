@@ -13,6 +13,15 @@ from dash.dependencies import Input, Output
 from gcvb.loader import loader as loader
 import gcvb.model as model
 
+def _fill_files(d, taskorval, ajc, fromtype):
+    d[fromtype] = [
+        {
+            "id": f["id"],
+            "file": job.format_launch_command(f["file"], loader.config, ajc),
+        }
+        for f in taskorval.get("serve_" + fromtype, [])
+    ]
+
 #Data
 def data_preparation(run, test_id):
     test = run.Tests[test_id]
@@ -32,9 +41,7 @@ def data_preparation(run, test_id):
         d["executable"] = task["executable"]
         d["options"] = task["options"]
         d["metrics"] = []
-        d["from_results"] = [{"id" : f["id"],
-                              "file" : job.format_launch_command(f["file"], loader.config, ajc)}
-                             for f in task.get("serve_from_results",[])]
+        _fill_files(d, task, ajc, "from_results")
         for validation in task_obj.Validations:
             job.fill_at_job_creation_validation(ajc, validation.raw_dict,
                                                 loader.data_root,  test.raw_dict["data"],
@@ -49,9 +56,7 @@ def data_preparation(run, test_id):
                     v["distance"] = metric.distance(validation.recorded_metrics[v["id"]])
                 else:
                     v["distance"] = "N/A (Missing metric)"
-                v["from_results"] = [{"id" : f["id"],
-                                      "file" : job.format_launch_command(f["file"], loader.config, ajc)}
-                                     for f in validation.raw_dict.get("serve_from_results",[])]
+                _fill_files(v, validation.raw_dict, ajc, "from_results")
             for metric_id, recorded_value in validation.get_untracked_metrics().items():
                 m = {}
                 d["metrics"].append(m)
@@ -62,6 +67,20 @@ def data_preparation(run, test_id):
                 m["from_results"]=[]
     return data
 
+
+def _metrics_file_links(m, data):
+    test_id = data["test_id"]
+    l = []
+    for f in m["from_results"]:
+        l.append(
+            html.A(
+                href=f"/files/{data['base_id']}/{test_id}/{f['file']}", children=f["id"]
+            )
+        )
+        l.append(", ")
+    return [" ("] + l[:-1] + [")"] if l else l
+
+
 #Content
 def metric_table(data, list_of_metrics):
     test_id = data["test_id"]
@@ -71,18 +90,7 @@ def metric_table(data, list_of_metrics):
 
     rows = []
     for m in list_of_metrics:
-        row = []
-
-        if m["from_results"]:
-            l = []
-            for f in m["from_results"]:
-                l.append(html.A(href=f"/files/{data['base_id']}/{test_id}/{f['file']}", children=f["id"]))
-                l.append(", ")
-            cell = html.Td([m["id"]]+[" ("]+l[:-1]+[")"])
-        else:
-            cell = html.Td(m["id"])
-        row.append(cell)
-
+        row = [html.Td([m["id"]] + _metrics_file_links(m, data))]
         for col in ["type", "distance", "tolerance"]:
             cell = html.Td(m[col])
             row.append(cell)
