@@ -50,7 +50,7 @@ CREATE TABLE files(id       INTEGER PRIMARY KEY,
                    test_id  INTEGER,
                    FOREIGN KEY(test_id) REFERENCES test(id));
 
-CREATE TABLE yaml_cache(mtime REAL, pickle BLOB);
+CREATE TABLE yaml_cache(mtime REAL, filename TEXT, pickle BLOB);
 """
 
 #GLOBAL
@@ -234,18 +234,18 @@ def save_files(cursor, run_id, test_id, file_list):
             cursor.execute(request,[file,content,test_id])
 
 @with_connection
-def save_yaml_cache(cursor, mtime, res_dict):
-    req1 = "INSERT INTO yaml_cache(mtime, pickle) VALUES (?,?)"
-    req2 = "DELETE FROM yaml_cache WHERE mtime < (?)"
+def save_yaml_cache(cursor, mtime, filename, res_dict):
+    req1 = "DELETE FROM yaml_cache WHERE filename = ?"
+    req2 = "INSERT INTO yaml_cache(mtime, filename, pickle) VALUES (?,?,?)"
     loaded_dict = util.pickle_obj_to_binary(res_dict)
-    cursor.execute(req1, (mtime, loaded_dict))
-    cursor.execute(req2, (mtime,))
+    cursor.execute(req1, (filename,))
+    cursor.execute(req2, (mtime, filename, loaded_dict))
     return res_dict
 
 @with_connection
-def load_yaml_cache(cursor):
-    request = "SELECT mtime, pickle FROM yaml_cache"
-    cursor.execute(request)
+def load_yaml_cache(cursor, filename):
+    request = "SELECT mtime, pickle FROM yaml_cache WHERE filename = ?"
+    cursor.execute(request, (filename, ))
     res = cursor.fetchone()
     if res is None:
         return 0, None
