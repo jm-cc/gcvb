@@ -190,7 +190,10 @@ def add_metric(cursor, run_id, test_id, step, name, value):
 def get_last_run(cursor):
     cursor.execute("SELECT * from run ORDER BY id DESC LIMIT 1")
     res=cursor.fetchone()
-    return (res["id"],res["gcvb_id"])
+    if res is None:
+        return None, None
+    else:
+        return res["id"], res["gcvb_id"]
 
 @with_connection
 def get_run_infos(cursor, run_id):

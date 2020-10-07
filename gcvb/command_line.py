@@ -251,6 +251,16 @@ def main():
 
     if args.command=="report":
         run_id,gcvb_id=db.get_last_run()
+        if args.polling:
+            while run_id is None:
+                time.sleep(args.frequency)
+                run_id, gcvb_id = db.get_last_run()
+            # FIXME no need to read all tests, we just want the number of tests
+            n = len(db.get_tests(run_id))
+            while n == 0:
+                time.sleep(args.frequency)
+                n = len(db.get_tests(run_id))
+
         computation_dir="./results/{}".format(str(gcvb_id))
 
         #Is the run finished ?
@@ -264,6 +274,8 @@ def main():
                 if (previous_completed_tests != len(completed_tests)):
                     now = time.strftime("%H:%M:%S %d/%m/%y")
                     print("Tests completed : {!s}/{!s} ({!s})".format(len(completed_tests),len(tests),now))
+                    # Polling is for progress monitoring so we need flush
+                    sys.stdout.flush()
                 time.sleep(args.frequency)
                 previous_completed_tests = len(completed_tests)
 
