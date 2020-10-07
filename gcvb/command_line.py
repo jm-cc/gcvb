@@ -207,7 +207,15 @@ def main():
         if not(args.dry_run) and not(args.with_jobrunner):
             job.launch(job_file,config)
         if (args.with_jobrunner):
-            j=jobrunner.JobRunner(args.with_jobrunner, run_id, config, args.started_first, args.max_concurrent, not args.quiet)
+            j = jobrunner.JobRunner(
+                args.with_jobrunner,
+                run_id,
+                config,
+                args.started_first,
+                args.max_concurrent,
+                not args.quiet,
+                a,
+            )
             j.run()
 
     if args.command=="jobrunner":

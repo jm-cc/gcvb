@@ -40,7 +40,7 @@ class Job(object):
         return self.name()
 
 class JobRunner(object):
-    def __init__(self, num_cores, run_id, config, started_first, max_concurrent, verbose):
+    def __init__(self, num_cores, run_id, config, started_first, max_concurrent, verbose, test_yaml=None):
         self.num_cores = num_cores
         self.running_tests = {}
         self.condition = threading.Condition()
@@ -56,11 +56,12 @@ class JobRunner(object):
         self.config = config
 
         # Generate job list
-        tmp = yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
-        test_informations = tmp["Tests"]
+        if test_yaml is None:
+            test_yaml = yaml_input.load_yaml(os.path.join(computation_dir,"tests.yaml"))
+        test_informations = test_yaml["Tests"]
         tests_for_current_run = db.get_tests(self.run_id)
 
-        data_root = tmp["data_root"]
+        data_root = test_yaml["data_root"]
         self.tests = {t["name"] : {} for t in tests_for_current_run}
         test_id_in_db = {t["name"] : t["id"] for t in tests_for_current_run}
         test_list = list(self.tests.keys())
