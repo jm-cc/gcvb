@@ -66,7 +66,7 @@ def parse():
         default=None,
     )
     parser_compute.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority (--with-jobrunner required)")
-    parser_compute.add_argument("--quiet", action="store_true", help="Show jobrunner execution log")
+    parser_compute.add_argument("--quiet", action="store_true", help="Hide jobrunner execution log")
     parser_compute.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner (--with-jobrunner required)", default=0)
 
     parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run","start_task","end_task"])
@@ -81,7 +81,7 @@ def parse():
 
     parser_jobrunner.add_argument("num_cores", metavar="num_cores", type=int, help="number of cores to be used")
     parser_jobrunner.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority")
-    parser_jobrunner.add_argument("--quiet", action="store_true", help="Show execution log")
+    parser_jobrunner.add_argument("--quiet", action="store_true", help="Hide execution log")
     parser_jobrunner.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner", default=0)
 
     parser_report.add_argument("--polling", action="store_true", help="poll report until finished or timeout expiration")
