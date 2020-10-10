@@ -284,7 +284,8 @@ def main():
             print(report.html_report(run))
         else:
             print(report.str_report(run))
-
+        if not run.success:
+            sys.exit(1)
 
     if args.command == "snippet":
         snippet.display(args)
