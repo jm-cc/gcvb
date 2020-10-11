@@ -55,13 +55,20 @@ CREATE TABLE yaml_cache(mtime REAL, filename TEXT, pickle BLOB);
 
 #GLOBAL
 database="gcvb.db"
+synchronous=None
 
 def set_db(db_path):
-    global database
+    global database, synchronous
     database=db_path
 
 def connect(file,f, *args, **kwargs):
+    global synchronous
     conn=sqlite3.connect(file, timeout=50)
+    if synchronous is None:
+        # See https://www.sqlite.org/pragma.html#pragma_synchronous
+        # OFF is known to be needed with Lustre
+        synchronous = os.environ.get("GCVB_SYNC", "FULL")
+    conn.execute(f"PRAGMA synchronous={synchronous}")
     conn.row_factory=sqlite3.Row
     c=conn.cursor()
     try:
@@ -79,6 +86,7 @@ def get_exclusive_access():
     """Returns a sqlite3.Connection with exclusive access to the db.
        Must be closed afterwards"""
     conn=sqlite3.connect(database, timeout=50)
+    conn.execute(f"PRAGMA synchronous={synchronous}")
     conn.row_factory=sqlite3.Row
     conn.isolation_level = 'EXCLUSIVE'
     conn.execute('BEGIN EXCLUSIVE')
