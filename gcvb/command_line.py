@@ -66,7 +66,7 @@ def parse():
         default=None,
     )
     parser_compute.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority (--with-jobrunner required)")
-    parser_compute.add_argument("--quiet", action="store_true", help="Show jobrunner execution log")
+    parser_compute.add_argument("--quiet", action="store_true", help="Hide jobrunner execution log")
     parser_compute.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner (--with-jobrunner required)", default=0)
 
     parser_db.add_argument("db_command", choices=["start_test","end_test","start_run","end_run","start_task","end_task"])
@@ -81,12 +81,12 @@ def parse():
 
     parser_jobrunner.add_argument("num_cores", metavar="num_cores", type=int, help="number of cores to be used")
     parser_jobrunner.add_argument("--started-first", action="store_true", help="already started tests are launched with a higher priority")
-    parser_jobrunner.add_argument("--quiet", action="store_true", help="Show execution log")
+    parser_jobrunner.add_argument("--quiet", action="store_true", help="Hide execution log")
     parser_jobrunner.add_argument("--max-concurrent", metavar="jobs", type=int, help="maxium jobs that can be executed concurrently by a jobrunner", default=0)
 
     parser_report.add_argument("--polling", action="store_true", help="poll report until finished or timeout expiration")
     parser_report.add_argument("-f","--frequency", help="time between each check", type=float, default=10)
-    parser_report.add_argument("--timeout", help="time between each", type=float, default=300)
+    parser_report.add_argument("--timeout", help="maximum time (in seconds) to wait for a single job to finish in polling mode", type=float, default=3600)
     parser_report.add_argument("--html", action="store_true", help="display result in html format")
 
 
@@ -207,7 +207,15 @@ def main():
         if not(args.dry_run) and not(args.with_jobrunner):
             job.launch(job_file,config)
         if (args.with_jobrunner):
-            j=jobrunner.JobRunner(args.with_jobrunner, run_id, config, args.started_first, args.max_concurrent, not args.quiet)
+            j = jobrunner.JobRunner(
+                args.with_jobrunner,
+                run_id,
+                config,
+                args.started_first,
+                args.max_concurrent,
+                not args.quiet,
+                a,
+            )
             j.run()
 
     if args.command=="jobrunner":
@@ -243,19 +251,32 @@ def main():
 
     if args.command=="report":
         run_id,gcvb_id=db.get_last_run()
+        if args.polling:
+            while run_id is None:
+                time.sleep(args.frequency)
+                run_id, gcvb_id = db.get_last_run()
+            # FIXME no need to read all tests, we just want the number of tests
+            n = len(db.get_tests(run_id))
+            while n == 0:
+                time.sleep(args.frequency)
+                n = len(db.get_tests(run_id))
+
         computation_dir="./results/{}".format(str(gcvb_id))
 
         #Is the run finished ?
-        started_at=time.time()
+        last_change = time.time()
         previous_completed_tests = -1
         completed_tests, tests, finished = report_check_terminaison(run_id)
 
         if args.polling:
-            while not finished and time.time()-started_at<args.timeout :
+            while not finished and time.time() - last_change < args.timeout :
                 completed_tests, tests, finished = report_check_terminaison(run_id)
                 if (previous_completed_tests != len(completed_tests)):
+                    last_change = time.time()
                     now = time.strftime("%H:%M:%S %d/%m/%y")
                     print("Tests completed : {!s}/{!s} ({!s})".format(len(completed_tests),len(tests),now))
+                    # Polling is for progress monitoring so we need flush
+                    sys.stdout.flush()
                 time.sleep(args.frequency)
                 previous_completed_tests = len(completed_tests)
 
@@ -264,7 +285,8 @@ def main():
             print(report.html_report(run))
         else:
             print(report.str_report(run))
-
+        if not run.success:
+            sys.exit(1)
 
     if args.command == "snippet":
         snippet.display(args)

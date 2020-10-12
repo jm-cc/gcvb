@@ -38,6 +38,7 @@ def data_preparation(run, test_id):
         job.fill_at_job_creation_task(ajc, task, f"{test_id}_{i}", loader.config)
         d = {}
         data["Tasks"].append(d)
+        d["status"] = task_obj.status
         d["executable"] = task["executable"]
         d["options"] = task["options"]
         d["metrics"] = []
@@ -116,17 +117,22 @@ def metric_table(data, list_of_metrics):
     return html.Table(html.Tbody([header]+rows,className="table table-sm table-bordered"))
 
 def summary_panel(data):
-    description_block=html.Div([html.H5("Description"),html.P(data["description"])],id="description")
+    description_block=html.Div([html.H4("Description"),html.P(data["description"])],id="description")
     return description_block
 
 def details_panel(data):
     el_list = []
     for c,t in enumerate(data["Tasks"], 1):
-        el_list.append(html.H6("{!s} - {} {}".format(c,t["executable"],t["options"])))
-        el_list.append(html.Span(_metrics_file_links(t, data)))
+        el_list.append(html.Code("{} {}".format(t["executable"],t["options"])))
+        files = _metrics_file_links(t, data)
+        if files:
+            el_list.append(html.Span(files))
+        if t["status"] >= 0:
+            el_list.append(html.Span([" Exit code: ", t["status"]]))
         if t["metrics"]:
             el_list.append(metric_table(data, t["metrics"]))
-    return html.Div([html.H5("Details"),*el_list])
+        el_list.append(html.Hr())
+    return html.Div([html.H4("Details"),*el_list])
 
 def status_to_badge(run):
     if run.failed:

@@ -50,18 +50,25 @@ CREATE TABLE files(id       INTEGER PRIMARY KEY,
                    test_id  INTEGER,
                    FOREIGN KEY(test_id) REFERENCES test(id));
 
-CREATE TABLE yaml_cache(mtime REAL, pickle BLOB);
+CREATE TABLE yaml_cache(mtime REAL, filename TEXT, pickle BLOB);
 """
 
 #GLOBAL
 database="gcvb.db"
+synchronous=None
 
 def set_db(db_path):
-    global database
+    global database, synchronous
     database=db_path
 
 def connect(file,f, *args, **kwargs):
+    global synchronous
     conn=sqlite3.connect(file, timeout=50)
+    if synchronous is None:
+        # See https://www.sqlite.org/pragma.html#pragma_synchronous
+        # OFF is known to be needed with Lustre
+        synchronous = os.environ.get("GCVB_SYNC", "FULL")
+    conn.execute(f"PRAGMA synchronous={synchronous}")
     conn.row_factory=sqlite3.Row
     c=conn.cursor()
     try:
@@ -79,6 +86,7 @@ def get_exclusive_access():
     """Returns a sqlite3.Connection with exclusive access to the db.
        Must be closed afterwards"""
     conn=sqlite3.connect(database, timeout=50)
+    conn.execute(f"PRAGMA synchronous={synchronous}")
     conn.row_factory=sqlite3.Row
     conn.isolation_level = 'EXCLUSIVE'
     conn.execute('BEGIN EXCLUSIVE')
@@ -190,7 +198,10 @@ def add_metric(cursor, run_id, test_id, step, name, value):
 def get_last_run(cursor):
     cursor.execute("SELECT * from run ORDER BY id DESC LIMIT 1")
     res=cursor.fetchone()
-    return (res["id"],res["gcvb_id"])
+    if res is None:
+        return None, None
+    else:
+        return res["id"], res["gcvb_id"]
 
 @with_connection
 def get_run_infos(cursor, run_id):
@@ -223,6 +234,16 @@ def load_report_n(cursor, run_id):
         res[t["name"]][t["task_step"]][t["metric"]]=t["value"]
     return res
 
+
+@with_connection
+def save_blobs(cursor, data):
+    request="""INSERT INTO files(filename,file, test_id)
+               VALUES (?,?,?)"""
+
+    for params in data:
+        cursor.execute(request, params)
+
+
 @with_connection
 def save_files(cursor, run_id, test_id, file_list):
     request="""INSERT INTO files(filename,file, test_id)
@@ -234,18 +255,18 @@ def save_files(cursor, run_id, test_id, file_list):
             cursor.execute(request,[file,content,test_id])
 
 @with_connection
-def save_yaml_cache(cursor, mtime, res_dict):
-    req1 = "INSERT INTO yaml_cache(mtime, pickle) VALUES (?,?)"
-    req2 = "DELETE FROM yaml_cache WHERE mtime < (?)"
+def save_yaml_cache(cursor, mtime, filename, res_dict):
+    req1 = "DELETE FROM yaml_cache WHERE filename = ?"
+    req2 = "INSERT INTO yaml_cache(mtime, filename, pickle) VALUES (?,?,?)"
     loaded_dict = util.pickle_obj_to_binary(res_dict)
-    cursor.execute(req1, (mtime, loaded_dict))
-    cursor.execute(req2, (mtime,))
+    cursor.execute(req1, (filename,))
+    cursor.execute(req2, (mtime, filename, loaded_dict))
     return res_dict
 
 @with_connection
-def load_yaml_cache(cursor):
-    request = "SELECT mtime, pickle FROM yaml_cache"
-    cursor.execute(request)
+def load_yaml_cache(cursor, filename):
+    request = "SELECT mtime, pickle FROM yaml_cache WHERE filename = ?"
+    cursor.execute(request, (filename, ))
     res = cursor.fetchone()
     if res is None:
         return 0, None
