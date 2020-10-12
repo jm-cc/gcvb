@@ -118,7 +118,10 @@ def get_references(tests_cases,data_root="./"):
     for d in data_dirs:
         res[d]={}
         ref_path=os.path.join(data_root,d,"references")
-        subfolders = [f.name for f in os.scandir(ref_path) if f.is_dir()]
+        if os.path.exists(ref_path):
+            subfolders = [f.name for f in os.scandir(ref_path) if f.is_dir()]
+        else:
+            subfolders = []
         for current_ref in subfolders:
             tmp=util.open_yaml(os.path.join(ref_path,current_ref,"ref.yaml"))
             for v in tmp:

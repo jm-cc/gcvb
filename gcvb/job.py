@@ -75,7 +75,10 @@ def fill_at_job_creation_validation(at_job_creation, validation, data_root, ref_
             v_dir,v_id=tmp[0],tmp[1]
         else:
             v_dir,v_id=validation["base"],validation["ref"]
-        at_job_creation["va_filename"]=valid[ref_data][v_dir][v_id]["file"]
+        if v_dir in valid[ref_data]:
+           at_job_creation["va_filename"]=valid[ref_data][v_dir][v_id]["file"]
+        else:
+           at_job_creation["va_filename"]="notavailable"
         at_job_creation["va_refdir"]=os.path.join(data_root,ref_data,"references",v_dir)
     if validation["executable"] in config["executables"]:
         at_job_creation["va_executable"]=config["executables"][validation["executable"]]
