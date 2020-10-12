@@ -86,7 +86,7 @@ def parse():
 
     parser_report.add_argument("--polling", action="store_true", help="poll report until finished or timeout expiration")
     parser_report.add_argument("-f","--frequency", help="time between each check", type=float, default=10)
-    parser_report.add_argument("--timeout", help="time between each", type=float, default=300)
+    parser_report.add_argument("--timeout", help="maximum time (in seconds) to wait for a single job to finish in polling mode", type=float, default=3600)
     parser_report.add_argument("--html", action="store_true", help="display result in html format")
 
 
@@ -264,14 +264,15 @@ def main():
         computation_dir="./results/{}".format(str(gcvb_id))
 
         #Is the run finished ?
-        started_at=time.time()
+        last_change = time.time()
         previous_completed_tests = -1
         completed_tests, tests, finished = report_check_terminaison(run_id)
 
         if args.polling:
-            while not finished and time.time()-started_at<args.timeout :
+            while not finished and time.time() - last_change < args.timeout :
                 completed_tests, tests, finished = report_check_terminaison(run_id)
                 if (previous_completed_tests != len(completed_tests)):
+                    last_change = time.time()
                     now = time.strftime("%H:%M:%S %d/%m/%y")
                     print("Tests completed : {!s}/{!s} ({!s})".format(len(completed_tests),len(tests),now))
                     # Polling is for progress monitoring so we need flush
