@@ -6,6 +6,8 @@ import random
 import subprocess
 import os
 import sys
+import glob
+from . import util
 from . import db
 from . import job as gcvb_job
 from . import yaml_input
@@ -49,7 +51,7 @@ class JobRunner(object):
         self.started_first = started_first
         self.max_concurrent = max_concurrent # 0 means unlimited
         self.verbose = verbose
-
+        self.keep = {}
         self.run_id = run_id
         self.base_id = db.get_base_from_run(run_id)
         computation_dir = f"./results/{self.base_id}"
@@ -68,6 +70,8 @@ class JobRunner(object):
         ref_valid = yaml_input.get_references([test_informations[n] for n in test_list],data_root)
         for test,tasks in self.tests.items():
             current_test = test_informations[test]
+            if 'keep' in current_test:
+                self.keep[current_test['id']] = current_test['keep']
             step = 0
             for c, task in enumerate(current_test["Tasks"]):
                 step += 1
@@ -102,6 +106,8 @@ class JobRunner(object):
         self.print(f"[{job.test_id}][Step {job.step}] cmd : {job.launch_command}")
         job.run()
         self.print(f"[{job.test_id}][Step {job.step}] Completed (return code : {job.return_code})")
+        # A test is stopped only if a Task fails (Validation failures do not matter)
+        stopped_by_error = job.return_code != exit_success if not(job.is_valid) else False
         with self.lock:
             self.available_cores += job.num_cores()
             del self.running_tests[(job.test_id,job.step)]
@@ -113,8 +119,6 @@ class JobRunner(object):
                          SET end_date = CURRENT_TIMESTAMP, status = ?
                          WHERE step = ? and test_id = ?"""
                 cursor.execute(req, [job.return_code, job.step, job.test_id_db])
-                # A test is stopped only if a Task fails (Validation failures do not matter)
-                stopped_by_error = job.return_code != exit_success if not(job.is_valid) else False
                 if job.is_last or stopped_by_error:
                     req = """UPDATE test
                              SET end_date = CURRENT_TIMESTAMP
@@ -128,9 +132,20 @@ class JobRunner(object):
                              WHERE parent = ? and test_id = ?"""
                     cursor.execute(req,[job.step, job.test_id_db])
             conn.close()
-
+        if job.is_last or stopped_by_error:
+            self.__save_files(job)
         with self.condition:
             self.condition.notify()
+
+    def __save_files(self, job):
+        # Read and compress without locking the db
+        tosave = []
+        for pattern in self.keep[job.test_id]:
+            for filename in glob.iglob(os.path.join(job.test_id, pattern)):
+                content=util.file_to_compressed_binary(filename)
+                tosave.append((os.path.basename(filename), content, job.test_id_db,))
+        # Now lock the DB and save
+        db.save_blobs(tosave)
 
     def run(self):
         """  Run all submited jobs and block until finished. """

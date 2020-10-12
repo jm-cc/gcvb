@@ -234,6 +234,16 @@ def load_report_n(cursor, run_id):
         res[t["name"]][t["task_step"]][t["metric"]]=t["value"]
     return res
 
+
+@with_connection
+def save_blobs(cursor, data):
+    request="""INSERT INTO files(filename,file, test_id)
+               VALUES (?,?,?)"""
+
+    for params in data:
+        cursor.execute(request, params)
+
+
 @with_connection
 def save_files(cursor, run_id, test_id, file_list):
     request="""INSERT INTO files(filename,file, test_id)
