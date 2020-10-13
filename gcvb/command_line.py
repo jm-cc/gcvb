@@ -29,7 +29,8 @@ def parse():
     group.add_argument('--filter-by-tag-or',metavar="tag_list",help="comma-separated list of tags to filter tests (OR operator)")
     #filter + exclude is possible.
     parser.add_argument('--exclude-tag',metavar="tag_list",help="comma-separated list of tags to filter tests. Tests containing at least one of the tags will be excluded.")
-    
+    parser.add_argument('--db-file', help="Alternative path of the gcvb.db file (experimental).", default="gcvb.db")
+
     subparsers = parser.add_subparsers(dest="command")
     parser_generate = subparsers.add_parser('generate', help="generate a new gcvb instance")
     parser_list = subparsers.add_parser('list', help="list tests (YAML)")
@@ -149,6 +150,7 @@ def list_human_readable(packs):
 
 def main():
     args=parse()
+    db.set_db(args.db_file)
     if args.command not in ["db","snippet"]:
         #currently db is a special command that is supposed to be invoked only internaly by gcvb.
         get_to_gcvb_root()
