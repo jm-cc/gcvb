@@ -19,7 +19,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=["PyYAML"],
+    install_requires=["PyYAML >= 5.1"],
     entry_points = {
         'console_scripts' : ['gcvb=gcvb.command_line:main']
     }
