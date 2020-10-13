@@ -2,7 +2,7 @@ import gcvb.yaml_input as yaml_input
 import gcvb.db as db
 import gcvb.job as job
 from collections import defaultdict
-
+import os
 
 
 class BaseLoader(object):
@@ -15,6 +15,13 @@ class BaseLoader(object):
     def load_base(self, run_id):
         ya,mod = db.retrieve_input(run_id)
         base = db.get_base_from_run(run_id)
+        if not os.path.exists(ya):
+            # FIXME replace all ./results/ by os.path.join("results", ...)
+            runya = f"./results/{base}/tests.yaml"
+            print(f"Warning: {ya} file missing. Trying {runya}")
+            ya = runya
+            # results/*/test.yaml have already modified applied
+            mod = None
         if (ya,mod) not in self.loaded:
             self.loaded[(ya,mod)] = yaml_input.load_yaml(ya,mod)
             refs = yaml_input.get_references(self.loaded[(ya,mod)]["Tests"].values(),self.data_root)
