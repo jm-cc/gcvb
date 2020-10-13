@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gcvb",
-    version="0.0.2",
+    version="1.0.0",
     author="Airbus SAS",
     author_email="jean-marie.couteyen-carpaye@airbus.com",
     description="A package which goal is to simplify non-regression testing for simulation code",
