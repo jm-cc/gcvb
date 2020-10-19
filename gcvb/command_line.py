@@ -124,7 +124,7 @@ def get_to_gcvb_root():
         nd = os.path.dirname(d)
         if nd == d:
             print("Warning: config.yaml was not found in a parent directory."
-                " Using current folder as gcvb instance root.")
+                " Using current folder as gcvb instance root.", file=sys.stderr)
             d = cwd
             break
         else:
