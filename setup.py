@@ -11,7 +11,7 @@ setuptools.setup(
     description="A package which goal is to simplify non-regression testing for simulation code",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    #url="https://github.com/pypa/sampleproject",
+    url="https://github.com/jm-cc/gcvb/",
     packages=setuptools.find_packages(),
     package_data={'' : ["assets/*"]},
     classifiers=[
@@ -22,5 +22,8 @@ setuptools.setup(
     install_requires=["PyYAML >= 5.1"],
     entry_points = {
         'console_scripts' : ['gcvb=gcvb.command_line:main']
+    },
+    extras_require = {
+        "dashboard":  ["dash-bootstrap-components"],
     }
 )

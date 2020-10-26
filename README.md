@@ -13,6 +13,12 @@ Clone this repository and in the directory run :
 pip3 install .
 ```
 
+or without git:
+
+```
+pip install --upgrade "gcvb[dashboard] @ https://github.com/jm-cc/gcvb/archive/master.zip"
+```
+
 ## Getting started
 
 As of today, the documentation is mainly available under the form of examples in the [gcvb-example repository](https://github.com/jm-cc/gcvb-examples).
