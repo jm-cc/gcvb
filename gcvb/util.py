@@ -9,6 +9,7 @@ import shutil
 import io
 import hashlib
 import pickle
+import re
 
 def hash_file(filename):
     with open(filename,"rb") as f:
@@ -47,3 +48,31 @@ def file_to_compressed_binary(file_in):
     with open(file_in,"rb") as f:
         content = f.read()
     return gzip.compress(content)
+
+def str_to_ip(str_in, default_ip="127.0.0.1", default_port=8050):
+    ip=default_ip
+    port=default_port
+
+    re_ip_and_port = '(?P<ip>[0-9]+(?:\\.[0-9]+){3}):(?P<port>[0-9]+)'
+    re_ip = '(?P<ip>[0-9]+(?:\\.[0-9]+){3})'
+    re_port = '(?P<port>[0-9]+)'
+
+    is_ip_and_port = re.fullmatch(re_ip_and_port, str_in)
+    is_ip = re.fullmatch(re_ip, str_in)
+    is_port = re.fullmatch(re_port, str_in)
+
+    if is_ip_and_port:
+        ip = is_ip_and_port.group("ip")
+        port = int(is_ip_and_port.group("port"))
+    elif is_ip:
+        ip = is_ip.group("ip")
+    elif is_port:
+        port = int(is_port.group("port"))
+    else:
+        raise ValueError(f"{str_in} is invalid.")
+
+    #Last check
+    max_value = (2**16-1)
+    if port < 1 or port > max_value :
+        raise ValueError(f"Port should be between 1 and {max_value}")
+    return ip, port

@@ -5,6 +5,7 @@ from dash.dependencies import Input, Output
 import os
 import io
 import gcvb.db as db
+from gcvb.util import str_to_ip
 
 import gcvb.loader as loader
 if __name__ == '__main__':
@@ -80,8 +81,9 @@ def display_page(pathname):
     else:
         return 'Bonjour'
 
-def run_server(debug=False):
-    app.run_server(debug=debug)
+def run_server(debug=False, bind_to="127.0.0.1:8050"):
+    host, port = str_to_ip(bind_to)
+    app.run_server(debug=debug, host=host, port=port)
 
 if __name__ == '__main__':
     app.run_server(debug=True)

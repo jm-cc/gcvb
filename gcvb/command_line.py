@@ -39,6 +39,7 @@ def parse():
     parser_report = subparsers.add_parser('report', help="get a report regarding a gcvb run")
     parser_dashboard = subparsers.add_parser('dashboard', help="launch a Dash instance to browse results" )
     parser_dashboard.add_argument("--debug", "-d", action="store_true", help="Run Flask in debug mode")
+    parser_dashboard.add_argument("--bind-to","-b", metavar="port_or_bind_address", help="change default binding", default="127.0.0.1:8050")
     parser_snippet = snippet.generate_parser(subparsers)
     parser_generate_refs = subparsers.add_parser('generate_refs', help="generate references from a base where a computation as already been executed.")
     parser_jobrunner = subparsers.add_parser("jobrunner", help="jobrunner to launch tests in parallel")
@@ -302,7 +303,7 @@ def main():
 
     if args.command=="dashboard":
         from . import dashboard
-        dashboard.run_server(debug=args.debug)
+        dashboard.run_server(debug=args.debug, bind_to=args.bind_to)
 
 if __name__ == '__main__':
     main()
