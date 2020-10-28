@@ -12,27 +12,27 @@ CREATE TABLE gcvb(id            INTEGER PRIMARY KEY,
                   command_line  TEXT,
                   yaml_file     TEXT,
                   modifier      TEXT,
-                  creation_date INTEGER);
+                  creation_date TIMESTAMP);
 
 CREATE TABLE run(id         INTEGER PRIMARY KEY,
-                 start_date TEXT,
-                 end_date   TEXT,
+                 start_date TIMESTAMP,
+                 end_date   TIMESTAMP,
                  gcvb_id    INTEGER,
                  config_id  TEXT,
                  FOREIGN KEY(gcvb_id) REFERENCES gcvb(id));
 
 CREATE TABLE test(id         INTEGER PRIMARY KEY,
                   name       TEXT,
-                  start_date TEXT,
-                  end_date   TEXT,
+                  start_date TIMESTAMP,
+                  end_date   TIMESTAMP,
                   run_id     INTEGER,
                   FOREIGN KEY(run_id) REFERENCES run(id));
 
 CREATE TABLE task(id         INTEGER PRIMARY KEY,
                   step       INTEGER,
                   parent     INTEGER,
-                  start_date TEXT,
-                  end_date   TEXT,
+                  start_date TIMESTAMP,
+                  end_date   TIMESTAMP,
                   test_id    INTEGER,
                   status     INTEGER DEFAULT -3, -- >=0, exit_status | -1 running | -2 ready | -3 pending
                   FOREIGN KEY(test_id) REFERENCES test(id));
