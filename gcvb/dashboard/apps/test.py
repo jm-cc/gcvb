@@ -42,6 +42,7 @@ def data_preparation(run, test_id):
         d["executable"] = task["executable"]
         d["options"] = task["options"]
         d["metrics"] = []
+        d["elapsed"] = task_obj.hr_elapsed()
         _fill_files(d, task, ajc, "from_results")
         _fill_files(d, task, ajc, "from_db")
         for validation in task_obj.Validations:
@@ -128,7 +129,7 @@ def details_panel(data):
         if files:
             el_list.append(html.Span(files))
         if t["status"] >= 0:
-            el_list.append(html.Span([" Exit code: ", t["status"]]))
+            el_list.append(html.Span([" Exit code: ", t["status"], f"({t['elapsed']})"]))
         if t["metrics"]:
             el_list.append(metric_table(data, t["metrics"]))
         el_list.append(html.Hr())
