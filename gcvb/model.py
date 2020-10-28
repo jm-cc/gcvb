@@ -41,6 +41,8 @@ class Validation:
         self.launch_command = valid_dict["launch_command"]
         self.recorded_metrics = {}
         self.init_metrics(config)
+        self.start_date = None
+        self.end_date = None
 
     def init_metrics(self, config):
         self.expected_metrics = {}
@@ -95,6 +97,10 @@ class Validation:
                 return False
         return True
 
+    @property
+    def elapsed(self):
+        return self.end_date-self.start_date
+
 class FileComparisonValidation(Validation):
     default_type = "absolute"
     default_reference = 0
@@ -130,6 +136,10 @@ class Task():
             return False
         return all([v.success for v in self.Validations])
 
+    @property
+    def elapsed(self):
+        return self.end_date-self.start_date
+
     def get_failures(self):
         res = []
         if self.completed:
@@ -152,6 +162,11 @@ class Task():
         if f:
             return f[0].hr_result()
         return "Success"
+
+    def hr_elapsed(self):
+        if self.completed:
+            return str(self.elapsed)
+        return "DNF" #Did not finish
 
 class Test():
     def __init__(self, test_dict, config, name=None, start_date=None, end_date=None):
@@ -183,6 +198,10 @@ class Test():
     def failed(self):
         #failed if a completed task failed.
         return any([bool(t.get_failures()) for t in self.Tasks if t.completed])
+
+    @property
+    def elapsed(self):
+        return self.end_date-self.start_date
 
     def __repr__(self):
         return f"{{id : {self.name}, status : TODO}}"
@@ -239,6 +258,10 @@ class Run():
     @property
     def failed(self):
         return any([test.failed for test in self.Tests.values()])
+
+    @property
+    def elapsed(self):
+        return self.end_date-self.start_date
 
     def get_running_tests(self):
         return [k for k,v in self.Tests.items() if not v.completed]
