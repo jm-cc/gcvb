@@ -1,6 +1,7 @@
 from enum import IntEnum
 from . import db
 from .loader import loader as loader
+import datetime
 
 class JobStatus(IntEnum):
     unlinked = -4
@@ -218,6 +219,13 @@ class Test():
                 return f"Step {k} : {f[0].hr_result()}"
         return "Success"
 
+def _strtotimestamp(s):
+    # for backward compatibility with previous database format
+    if isinstance(s, str):
+        return datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+    else:
+        return s
+
 class Run():
     def __test_db_to_objects(self):
         self.db_tests = db.get_tests(self.run_id)
@@ -232,8 +240,8 @@ class Run():
             for step, metrics in recorded_metrics[test_id].items():
                 test.Steps[step-1].recorded_metrics = metrics
             for step, step_info in steps[test_id].items():
-                test.Steps[step-1].start_date = step_info["start_date"]
-                test.Steps[step-1].end_date = step_info["end_date"]
+                test.Steps[step-1].start_date = _strtotimestamp(step_info["start_date"])
+                test.Steps[step-1].end_date = _strtotimestamp(step_info["end_date"])
                 test.Steps[step-1].status = step_info["status"]
 
     def __init__(self, run_id):
