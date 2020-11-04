@@ -23,7 +23,6 @@ def data_preparation(run_id):
         res["description"].append(test.raw_dict.get("description", ""))
         res["result"].append(test.hr_result())
         res["cpu time (s)"].append(test.cpu_time())
-    print(res)
     return res
 
 # View
