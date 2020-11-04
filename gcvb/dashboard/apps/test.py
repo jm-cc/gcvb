@@ -135,12 +135,12 @@ def details_panel(data):
         el_list.append(html.Hr())
     return html.Div([html.H4("Details"),*el_list])
 
-def status_to_badge(run):
-    if run.failed:
+def status_to_badge(test):
+    if test.failed:
         return html.Span("Failure",className="badge badge-danger")
-    if not(run.completed):
+    if not(test.completed):
         return html.Span("In progress",className="badge badge-info")
-    if run.success:
+    if test.success:
         return html.Span("Success",className="badge badge-success")
     raise ValueError("Unexpected")
 
@@ -150,7 +150,7 @@ def gen_page(run_id, test_id):
     data=data_preparation(run,test_id)
 
     #Title + Badge
-    status_str=status_to_badge(run)
+    status_str=status_to_badge(run.Tests[test_id])
 
     title=html.H1([data["test_id"]+" ",status_str])
     res=dbc.Container([title,summary_panel(data),details_panel(data)])
