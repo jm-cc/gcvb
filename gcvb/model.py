@@ -219,6 +219,15 @@ class Test():
                 return f"Step {k} : {f[0].hr_result()}"
         return "Success"
 
+    def cpu_time(self):
+        ct = 0
+        for task in self.Tasks:
+            if task.completed:
+                ct += task.elapsed.total_seconds() * task.nthreads * task.nprocs
+            else:
+                return float('inf')
+        return ct
+
 def _strtotimestamp(s):
     # for backward compatibility with previous database format
     if isinstance(s, str):

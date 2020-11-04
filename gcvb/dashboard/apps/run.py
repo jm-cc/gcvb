@@ -17,11 +17,13 @@ from dash.dependencies import Input, Output
 # Data
 def data_preparation(run_id):
     run = model.Run(run_id)
-    res={"id" : [], "description" : [], "result" : []}
+    res={"id" : [], "description" : [], "result" : [], "cpu time (s)": []}
     for test_id,test in run.Tests.items():
         res["id"].append(test_id)
         res["description"].append(test.raw_dict.get("description", ""))
         res["result"].append(test.hr_result())
+        res["cpu time (s)"].append(test.cpu_time())
+    print(res)
     return res
 
 # View
@@ -48,7 +50,13 @@ def gen_page(run_id, gcvb_id):
     computation_dir="./results/{}".format(str(gcvb_id))
     run_id,gcvb_id=db.get_last_run()
     data = data_preparation(run_id)
-    layout = dbc.Container([dji.Import(src="/assets/sortable.js"), html.H1("Run"),Table(data,run_id,["id","description","result"])])
+    layout = dbc.Container(
+        [
+            dji.Import(src="/assets/sortable.js"),
+            html.H1("Run"),
+            Table(data, run_id, data.keys()),
+        ]
+    )
     return layout
 
 layout = html.Div(id="run-content")
