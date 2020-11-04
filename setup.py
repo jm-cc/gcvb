@@ -24,6 +24,6 @@ setuptools.setup(
         'console_scripts' : ['gcvb=gcvb.command_line:main']
     },
     extras_require = {
-        "dashboard":  ["dash-bootstrap-components"],
+        "dashboard":  ["dash-bootstrap-components", "dash-defer-js-import"],
     }
 )

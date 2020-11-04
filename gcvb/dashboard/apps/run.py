@@ -6,6 +6,7 @@ import gcvb.yaml_input as yaml_input
 import os
 from gcvb.loader import loader as loader
 import gcvb.model as model
+import dash_defer_js_import as dji
 
 if __name__ == '__main__':
     from app import app
@@ -39,19 +40,18 @@ def Table(report, run_id, columns=None):
             row.append(cell)
         rows.append(html.Tr(row))
     rows = [html.Tbody(rows)]
-    return html.Table([html.Tr([html.Th(col) for col in columns])] + rows,
-                      className="table table-hover table-bordered table-sm")
+    head = html.Thead([html.Tr([html.Th(col) for col in columns])])
+    return html.Table([head] + rows, className="table table-hover table-bordered table-sm")
 
 #Page Generator
 def gen_page(run_id, gcvb_id):
     computation_dir="./results/{}".format(str(gcvb_id))
     run_id,gcvb_id=db.get_last_run()
     data = data_preparation(run_id)
-    layout = dbc.Container([html.H1("Run"),Table(data,run_id,["id","description","result"])])
+    layout = dbc.Container([dji.Import(src="/assets/sortable.js"), html.H1("Run"),Table(data,run_id,["id","description","result"])])
     return layout
 
 layout = html.Div(id="run-content")
-
 @app.callback(Output('run-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
