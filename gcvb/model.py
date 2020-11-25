@@ -188,6 +188,7 @@ class Test():
         self.name = name
         self.start_date = start_date
         self.end_date = end_date
+        self.data = self.raw_dict["data"]
 
         self.Run = run
 
