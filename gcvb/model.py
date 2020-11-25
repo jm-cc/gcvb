@@ -34,7 +34,7 @@ class RelativeMetric:
 class Validation:
     default_type = "relative"
     default_reference = None
-    def __init__(self, valid_dict, config):
+    def __init__(self, valid_dict, config, task=None):
         self.raw_dict = valid_dict
         self.status = JobStatus.unlinked
         self.executable = valid_dict["executable"]
@@ -44,6 +44,7 @@ class Validation:
         self.init_metrics(config)
         self.start_date = None
         self.end_date = None
+        self.Task = task
 
     def init_metrics(self, config):
         self.expected_metrics = {}
@@ -107,7 +108,7 @@ class FileComparisonValidation(Validation):
     default_reference = 0
 
 class Task():
-    def __init__(self, task_dict, config):
+    def __init__(self, task_dict, config, test=None):
         self.raw_dict = task_dict
         self.status = JobStatus.unlinked
         self.executable = task_dict["executable"]
@@ -119,11 +120,12 @@ class Task():
         self.Validations = []
         for v in task_dict.get("Validations", []):
             if v["type"] == "script":
-                self.Validations.append(Validation(v, config))
+                self.Validations.append(Validation(v, config, self))
             else:
-                self.Validations.append(FileComparisonValidation(v, config))
+                self.Validations.append(FileComparisonValidation(v, config, self))
         self.start_date = None
         self.end_date = None
+        self.Test = test
 
     @property
     def completed(self):
@@ -170,12 +172,12 @@ class Task():
         return "DNF" #Did not finish
 
 class Test():
-    def __init__(self, test_dict, config, name=None, start_date=None, end_date=None):
+    def __init__(self, test_dict, config, name=None, start_date=None, end_date=None, run=None):
         self.raw_dict = test_dict
         # Tasks
         self.Tasks = []
         for t in test_dict.get("Tasks"):
-            self.Tasks.append(Task(t, config))
+            self.Tasks.append(Task(t, config, self))
         # Steps
         self.Steps = []
         for t in self.Tasks:
@@ -186,6 +188,8 @@ class Test():
         self.name = name
         self.start_date = start_date
         self.end_date = end_date
+
+        self.Run = run
 
     @property
     def completed(self):
@@ -242,7 +246,7 @@ class Run():
         self.gcvb_base = loader.load_base(self.run_id)
         self.references = loader.references
         b = self.gcvb_base["Tests"]
-        self.Tests = {t["name"] : Test(b[t["name"]], self.config, t["name"], t["start_date"], t["end_date"]) for t in self.db_tests}
+        self.Tests = {t["name"] : Test(b[t["name"]], self.config, t["name"], t["start_date"], t["end_date"], self) for t in self.db_tests}
         # Fill infos for every step
         recorded_metrics = db.load_report_n(self.run_id)
         steps = db.get_steps(self.run_id)
