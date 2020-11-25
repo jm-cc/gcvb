@@ -240,6 +240,7 @@ class Run():
         self.db_tests = db.get_tests(self.run_id)
         self.base_id = db.get_base_from_run(self.run_id)
         self.gcvb_base = loader.load_base(self.run_id)
+        self.references = loader.references
         b = self.gcvb_base["Tests"]
         self.Tests = {t["name"] : Test(b[t["name"]], self.config, t["name"], t["start_date"], t["end_date"]) for t in self.db_tests}
         # Fill infos for every step
