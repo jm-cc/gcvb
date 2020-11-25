@@ -55,6 +55,10 @@ def data_preparation(run, test_id):
                 d["metrics"].append(v)
                 v["id"]=metric_id
                 v["type"]=metric.type
+                if validation.type == "file_comparison":
+                    id_str = validation.filename if validation.filename else validation.ref_id
+                    v["id"] = f"{metric_id} ({validation.base}/{id_str})"
+                    v["type"] = "file_comparison"
                 v["tolerance"]=metric.tolerance
                 if metric_id in validation.recorded_metrics:
                     v["distance"] = metric.distance(validation.recorded_metrics[v["id"]])
