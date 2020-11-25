@@ -107,6 +107,22 @@ class FileComparisonValidation(Validation):
     default_type = "absolute"
     default_reference = 0
 
+    def __init__(self, valid_dict, config, task=None):
+        super().__init__(valid_dict, config, task)
+        self.base = self.raw_dict["base"]
+        self.ref_id = self.raw_dict["ref"]
+
+    @property
+    def data(self):
+        return self.Task.Test.data
+
+    @property
+    def filename(self):
+        ref = self.Task.Test.Run.references[self.data]
+        if self.base in ref:
+            return ref[self.base][self.ref_id]["file"]
+        return "" #The gcvb.db may be used alone, the filename information is lost in this case #FIXME
+
 class Task():
     def __init__(self, task_dict, config, test=None):
         self.raw_dict = task_dict
