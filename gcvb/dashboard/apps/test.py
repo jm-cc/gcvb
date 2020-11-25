@@ -31,6 +31,7 @@ def data_preparation(run, test_id):
     data["Tasks"] = []
     data["test_id"] = test_id
     data["description"] = test.raw_dict.get("description","")
+    data["data_directory"] = test.raw_dict.get("data")
 
     for i,task_obj in enumerate(test.Tasks):
         task = task_obj.raw_dict #FIXME quickway to have old behaviour
@@ -119,7 +120,8 @@ def metric_table(data, list_of_metrics):
 
 def summary_panel(data):
     description_block=html.Div([html.H4("Description"),html.P(data["description"])],id="description")
-    return description_block
+    data_dir=html.Div([html.H4("Data Directory"), html.P(data["data_directory"])])
+    return html.Div([description_block, data_dir])
 
 def details_panel(data):
     el_list = []
