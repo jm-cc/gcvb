@@ -61,7 +61,7 @@ def data_preparation(run, test_id):
                     v["type"] = "file_comparison"
                 v["tolerance"]=metric.tolerance
                 if metric_id in validation.recorded_metrics:
-                    v["distance"] = metric.distance(validation.recorded_metrics[v["id"]])
+                    v["distance"] = metric.distance(validation.recorded_metrics[metric_id])
                 else:
                     v["distance"] = "N/A"
                 _fill_files(v, validation.raw_dict, ajc, "from_results")
