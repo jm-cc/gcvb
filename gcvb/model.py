@@ -14,7 +14,7 @@ class AbsoluteMetric:
     def __init__(self, reference, tolerance, unit = None):
         self.type = "absolute"
         self.reference = reference
-        self.tolerance = tolerance
+        self.tolerance = float(tolerance)
         self.unit = unit
     def distance(self, value):
         return abs(value - self.reference)
