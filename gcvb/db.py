@@ -67,7 +67,7 @@ def set_db(db_path):
 
 def connect(file,f, *args, **kwargs):
     global synchronous
-    conn=sqlite3.connect(file, timeout=50, detect_types=sqlite3.PARSE_DECLTYPES)
+    conn=sqlite3.connect(file, timeout=50, detect_types=sqlite3.PARSE_DECLTYPES, isolation_level='EXCLUSIVE')
     if synchronous is None:
         # See https://www.sqlite.org/pragma.html#pragma_synchronous
         # OFF is known to be needed with Lustre
