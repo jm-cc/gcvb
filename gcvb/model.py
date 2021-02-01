@@ -368,6 +368,6 @@ class OutOfTolerance(TaskFailure):
         return self.__repr__()
 
     def hr_result(self):
-        target = self.metric.reference #FIXME
+        target = self.metric.tolerance #FIXME
         value = self.recorded #FIXME
         return f"{self.metric.type.capitalize()} metric {self.metric_id} is out of tolerance. (target : {target}, value : {value})"
