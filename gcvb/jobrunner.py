@@ -138,6 +138,8 @@ class JobRunner(object):
             self.condition.notify()
 
     def __save_files(self, job):
+        if job.test_id not in self.keep:
+            return
         # Read and compress without locking the db
         tosave = []
         for pattern in self.keep[job.test_id]:
