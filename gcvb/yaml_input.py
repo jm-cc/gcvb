@@ -113,7 +113,7 @@ def get_references(tests_cases,data_root="./"):
     Keyword argument:
     tests_cases -- iterable of tests_cases
     """
-    data_dirs={t["data"] for t in tests_cases}
+    data_dirs = {t["data"] for t in tests_cases if "data" in t}
     res={}
     for d in data_dirs:
         res[d]={}

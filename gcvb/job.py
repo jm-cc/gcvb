@@ -29,11 +29,12 @@ def generate(target_dir,gcvb):
     for p in gcvb["Packs"]:
         for t in p["Tests"]:
             os.makedirs(os.path.join(target_dir,t["id"]))
-            data_path=os.path.join(data_root,t["data"],"input")
-            for file in os.listdir(data_path):
-                src=os.path.join(data_path,file)
-                dst=os.path.join(target_dir,t["id"],file)
-                os.symlink(src,dst)
+            if "data" in t:
+                data_path=os.path.join(data_root,t["data"],"input")
+                for file in os.listdir(data_path):
+                    src=os.path.join(data_path,file)
+                    dst=os.path.join(target_dir,t["id"],file)
+                    os.symlink(src,dst)
             if ("template_files" in t):
                 if isinstance(t["template_files"], list):
                     for template_dir in t["template_files"]:
