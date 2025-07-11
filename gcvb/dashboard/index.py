@@ -1,6 +1,7 @@
+import dash
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 from dash.dependencies import Input, Output
 import os
 import io
@@ -83,7 +84,7 @@ def display_page(pathname):
 
 def run_server(debug=False, bind_to="127.0.0.1:8050"):
     host, port = str_to_ip(bind_to)
-    app.run_server(debug=debug, host=host, port=port)
+    app.run(debug=debug, host=host, port=port)
 
 if __name__ == '__main__':
     app.run_server(debug=True)

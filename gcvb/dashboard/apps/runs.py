@@ -1,6 +1,7 @@
+import dash
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 
 graph =  html.Div(dcc.Graph(figure={"data": [{"x": [1, 2, 3,5], "y": [1, 9, 9, 11]}]}),id="graph")
 
