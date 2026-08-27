@@ -1,0 +1,27 @@
+[workspace]
+name = "gcvb"
+version = "0.1.0"
+description = "gcvb is a Python module aiming at facilitating non-regression, validation and benchmarking of simulation codes."
+authors = ["jm-cc <jm-cc@users.noreply.github.com>"]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[tasks]
+setup = "pip install --no-build-isolation --no-deps ."
+
+[dependencies]
+python = "*"
+pyyaml = "*"
+setuptools = "*"
+pip = "*"
+
+[feature.dashboard.dependencies]
+dash = "*"
+dash-bootstrap-components = "*"
+
+[feature.dashboard.tasks]
+dashboard = "python -m gcvb dashboard"
+
+[environments]
+default = []
+dashboard = ["dashboard"]
